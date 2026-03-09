@@ -8,7 +8,12 @@ async function request(path, options = {}) {
         ...options.headers,
     };
 
-    const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    let res;
+    try {
+        res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    } catch (err) {
+        throw new Error('Cannot connect to server. Run: node server/index.cjs');
+    }
 
     if (res.status === 401) {
         localStorage.removeItem('terp_token');
@@ -17,7 +22,13 @@ async function request(path, options = {}) {
         throw new Error('Unauthorized');
     }
 
-    const data = await res.json();
+    let data;
+    try {
+        data = await res.json();
+    } catch (err) {
+        throw new Error('Server returned invalid response. Is backend running on port 3001?');
+    }
+
     if (!res.ok) throw new Error(data.error || 'Request failed');
     return data;
 }
