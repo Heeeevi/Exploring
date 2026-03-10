@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ⛓️ ChainFund
 
 **Blockchain-verified financial transparency for NGOs.**
@@ -7,7 +6,8 @@ ChainFund is an open-source ERP system that combines traditional financial manag
 
 ![React](https://img.shields.io/badge/React-19.1-blue?logo=react)
 ![Vite](https://img.shields.io/badge/Vite-7.3-purple?logo=vite)
-![Express](https://img.shields.io/badge/Express-4.21-black?logo=express)
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase)
+![Netlify](https://img.shields.io/badge/Netlify-Functions-00C7B7?logo=netlify)
 ![Solana](https://img.shields.io/badge/Solana-Devnet-green?logo=solana)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
@@ -45,18 +45,18 @@ ChainFund is an open-source ERP system that combines traditional financial manag
 
 ```
 ┌─────────────────────────────────────────────────┐
-│                  React SPA (Vite)                │
+│              React SPA (Vite) — Netlify CDN      │
 │  Dashboard · Finance · Donors · Programs · Log   │
 └──────────────────────┬──────────────────────────┘
-                       │ REST API
+                       │ /api/* → redirects
 ┌──────────────────────▼──────────────────────────┐
-│              Express 4.21 Backend                │
-│  JWT Auth · CRUD · Hash Chain · Activity Log     │
+│          Netlify Serverless Functions             │
+│  auth · transactions · donors · programs · etc   │
 └──────┬───────────────────────────────┬──────────┘
        │                               │
 ┌──────▼──────┐              ┌─────────▼─────────┐
-│   SQLite    │              │  Solana Devnet     │
-│  (WAL mode) │              │  Memo Program      │
+│  Supabase   │              │  Solana Devnet     │
+│  PostgreSQL │              │  Memo Program      │
 │  7 tables   │              │  Merkle Root Proof  │
 └─────────────┘              └────────────────────┘
 ```
@@ -74,41 +74,64 @@ ChainFund is an open-source ERP system that combines traditional financial manag
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Deployment (Netlify + Supabase)
 
 ### Prerequisites
-- **Node.js** ≥ 18
-- **npm** ≥ 9
+- [Supabase](https://supabase.com) account (free tier)
+- [Netlify](https://app.netlify.com) account (free tier)
+- GitHub repo
 
-### 1. Clone & Install
+### Step 1: Set Up Supabase
+
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Go to **SQL Editor** → **New Query**
+3. Paste the contents of `supabase/schema.sql` and **Run**
+4. Copy from **Settings → API**:
+   - **Project URL** → `SUPABASE_URL`
+   - **service_role key** → `SUPABASE_SERVICE_ROLE_KEY`
+
+### Step 2: Deploy to Netlify
+
+1. Push code to GitHub
+2. Go to [app.netlify.com](https://app.netlify.com) → **Add new site** → **Import from Git**
+3. Select your repo — build settings are auto-detected from `netlify.toml`
+4. Add **Environment Variables** in Netlify dashboard:
+
+| Variable | Value |
+|----------|-------|
+| `SUPABASE_URL` | `https://xxx.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | `eyJhbGci...` |
+| `JWT_SECRET` | Any strong random string |
+| `SOLANA_KEYPAIR` | `[1,2,3,...]` (JSON array from `solana/keypair.json`) |
+| `SOLANA_NETWORK` | `devnet` |
+
+5. Click **Deploy** → Done! 🎉
+
+Every push to `main` auto-deploys.
+
+### Step 3: Login
+
+- **Email:** admin@chainfund.org
+- **Password:** admin123
+
+---
+
+## 🛠️ Local Development
+
+The project also includes an Express + SQLite backend for local dev:
 
 ```bash
-git clone https://github.com/Heeeevi/Exploring.git
-cd Exploring
+# Install dependencies
 npm install
-```
 
-### 2. Seed Demo Data (Optional)
-
-```bash
+# Seed demo data (optional)
 npm run seed
-```
 
-This creates 7 donors, 5 programs, and 25 sample transactions with full hash chain.
-
-### 3. Start Development
-
-```bash
+# Start backend (port 3001) + frontend (port 5173)
 npm start
 ```
 
-This runs both the backend (port 3001) and frontend (port 5173) concurrently.
-
-### 4. Login
-
-Open `http://localhost:5173` and login with:
-- **Email:** admin@chainfund.org
-- **Password:** admin123
+Open `http://localhost:5173`
 
 ---
 
@@ -118,103 +141,51 @@ Open `http://localhost:5173` and login with:
 ├── index.html              # Vite entry point
 ├── package.json            # Dependencies & scripts
 ├── vite.config.js          # Vite config with API proxy
-├── netlify.toml            # Netlify deployment config
+├── netlify.toml            # Netlify deployment + function routing
 ├── .env.example            # Environment variable template
 │
-├── server/                 # Express backend
+├── netlify/functions/      # Serverless backend (Netlify Functions)
+│   ├── auth.cjs            # Login, register, JWT
+│   ├── transactions.cjs    # CRUD + blockchain hashing
+│   ├── donors.cjs          # CRUD + safety checks
+│   ├── programs.cjs        # CRUD + status management
+│   ├── public.cjs          # Public ledger & verify API
+│   ├── solana.cjs          # Solana anchoring & verification
+│   ├── activity.cjs        # Activity log & stats
+│   ├── health.cjs          # Health check
+│   └── lib/
+│       ├── supabase.cjs    # Supabase client
+│       ├── helpers.cjs     # Auth, CORS, response helpers
+│       ├── blockchain.cjs  # SHA-256 hash chain (Supabase)
+│       └── solana-anchor.cjs # Solana Memo Program service
+│
+├── supabase/
+│   └── schema.sql          # Full database schema + RPC functions + seed
+│
+├── server/                 # Express backend (local dev only)
 │   ├── index.cjs           # Server entry, route mounting
-│   ├── db.cjs              # SQLite init, schema, migrations
+│   ├── db.cjs              # SQLite init, schema
 │   ├── blockchain.cjs      # SHA-256 hash chain logic
 │   ├── seed-demo.cjs       # Demo data seeder
-│   ├── data/               # SQLite database files
-│   └── routes/
-│       ├── auth.cjs        # Login, register, JWT
-│       ├── transactions.cjs # CRUD + blockchain hashing
-│       ├── donors.cjs      # CRUD + safety checks
-│       ├── programs.cjs    # CRUD + status management
-│       ├── public.cjs      # Public ledger & verify API
-│       └── activity.cjs    # Activity log & stats
+│   └── routes/             # Express API routes
 │
 ├── solana/                 # Solana integration
-│   ├── anchor-service.cjs  # Merkle Root anchoring via Memo Program
-│   └── keypair.json        # Solana wallet (devnet)
+│   ├── anchor-service.cjs  # Merkle Root anchoring
+│   └── keypair.json        # Wallet keypair (devnet)
 │
 └── src/                    # React frontend
     ├── App.jsx             # Router & layout
     ├── api.js              # API client
     ├── AuthContext.jsx      # JWT auth context
     ├── index.css           # Design system (dark theme)
-    ├── main.jsx            # React entry
-    └── pages/
-        ├── Dashboard.jsx    # Stats + Solana widget
-        ├── DashboardLayout.jsx # Sidebar layout
-        ├── Finance.jsx      # Transaction management
-        ├── Donors.jsx       # Donor management
-        ├── Programs.jsx     # Program management
-        ├── ActivityLog.jsx  # Audit trail timeline
-        ├── Landing.jsx      # Public landing page
-        ├── Login.jsx        # Auth page
-        ├── PublicLedger.jsx # Public transaction browser
-        ├── Verify.jsx       # Transaction verification
-        ├── Guide.jsx        # Admin guide (Indonesian)
-        └── HowItWorks.jsx  # Public explainer (Indonesian)
+    └── pages/              # All page components
 ```
-
----
-
-## 🌐 Deployment
-
-### Frontend → Netlify
-
-1. Push to GitHub
-2. Connect repo in [Netlify](https://app.netlify.com)
-3. Build settings are auto-detected from `netlify.toml`:
-   - **Build command:** `npm run build`
-   - **Publish directory:** `dist`
-4. Set environment variable:
-   - `VITE_API_URL` = `https://your-backend-url.com/api`
-5. Every push to `main` triggers auto-deploy ✅
-
-### Backend → Railway / Render / Fly.io
-
-The Express + SQLite backend needs a persistent server. Recommended options:
-
-#### Railway (easiest)
-```bash
-# In the repo root:
-railway login
-railway init
-railway up
-```
-Set `PORT=3001` in Railway dashboard.
-
-#### Render
-1. Create a **Web Service** pointing to this repo
-2. **Build command:** `npm install`
-3. **Start command:** `node server/index.cjs`
-4. Add env var `PORT=3001`
-
-#### Fly.io
-```bash
-fly launch
-fly deploy
-```
-
-> **Note:** After deploying the backend, copy its URL and set `VITE_API_URL` in Netlify.
-
----
-
-## 🔐 Security Notes
-
-- Change `JWT_SECRET` in production (set via env var)
-- Solana keypair in `solana/keypair.json` is for **devnet only**
-- SQLite WAL mode enables concurrent reads
-- Passwords hashed with bcrypt (10 rounds)
-- CORS configured for cross-origin API access
 
 ---
 
 ## 📜 API Endpoints
+
+All endpoints are available at `/api/*` and route to Netlify Functions.
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
@@ -235,9 +206,10 @@ fly deploy
 | GET | `/api/activity` | ✅ | Activity log |
 | GET | `/api/activity/stats` | ✅ | Activity statistics |
 | POST | `/api/solana/anchor` | ✅ | Anchor to Solana |
-| GET | `/api/solana/anchors` | ✅ | List anchors |
-| GET | `/api/solana/verify/:sig` | ✅ | Verify Solana TX |
+| GET | `/api/solana/anchors` | ❌ | List anchors |
+| GET | `/api/solana/verify/:sig` | ❌ | Verify Solana TX |
 | GET | `/api/solana/wallet` | ✅ | Wallet info |
+| GET | `/api/solana/status` | ❌ | Solana status |
 | GET | `/api/public/stats` | ❌ | Public stats |
 | GET | `/api/public/ledger` | ❌ | Public ledger |
 | GET | `/api/public/verify/:id` | ❌ | Verify transaction |
@@ -246,13 +218,23 @@ fly deploy
 
 ---
 
+## 🔐 Security Notes
+
+- Change `JWT_SECRET` in production (set via env var)
+- Supabase uses `service_role` key (server-side only, never exposed to client)
+- Solana keypair stored as env var in Netlify (not in repo)
+- Passwords hashed with bcrypt (10 rounds)
+- RLS enabled on all tables
+
+---
+
 ## 🛠️ Scripts
 
 ```bash
-npm start        # Run backend + frontend concurrently
+npm start        # Local: backend + frontend concurrently
 npm run dev      # Frontend only (Vite dev server)
 npm run server   # Backend only (Express)
-npm run seed     # Seed demo data
+npm run seed     # Seed demo data (local SQLite)
 npm run build    # Production build (Vite)
 npm run preview  # Preview production build
 ```
@@ -278,113 +260,3 @@ MIT © [Heeeevi](https://github.com/Heeeevi)
 <p align="center">
   <strong>⛓️ ChainFund</strong> — Trust through transparency.
 </p>
-=======
-# TransparentERP
-
-Blockchain-backed ERP system providing verifiable financial transparency for NGOs and nonprofit organizations. Every transaction is immutably recorded and publicly verifiable.
-
-## What This App Does
-
-TransparentERP helps NGOs manage their finances while giving donors and auditors cryptographic proof that funds are being used as reported. It combines traditional ERP capabilities with a blockchain-inspired immutable ledger.
-
-### Core Features
-
-- **Financial Management** — Record income and expense transactions with categories, donor links, and program allocation.
-- **Donor Tracking** — Manage donor profiles, track contributions, and maintain relationship history.
-- **Program Management** — Create and monitor programs with budgets, track spending against allocations, and view utilization.
-- **Immutable Ledger** — Every transaction is hashed (SHA-256) and chain-linked to the previous entry, creating a tamper-evident audit trail.
-- **Public Transparency Portal** — A public-facing ledger page (no login required) where anyone can browse all transactions, search entries, and export data.
-- **Transaction Verification** — Anyone can verify a specific transaction's existence and integrity using its ID, and check the full chain's integrity.
-- **Dashboard & Charts** — Overview of income vs. expenses over time, net balance, donor counts, and blockchain chain status.
-
-## Tech Stack
-
-| Layer    | Technology                              |
-| -------- | --------------------------------------- |
-| Frontend | React 19, React Router, Recharts, Vite  |
-| Backend  | Node.js, Express 5                      |
-| Database | SQLite (better-sqlite3)                 |
-| Auth     | JWT + bcrypt                            |
-| Icons    | Lucide React                            |
-
-## Getting Started
-
-```bash
-# Install dependencies
-npm install
-
-# Start both the backend server and frontend dev server
-npm start
-```
-
-This runs:
-- **Backend API** on `http://localhost:3001`
-- **Frontend** on `http://localhost:5173`
-
-### Default Admin Credentials
-
-> **⚠️ Change these immediately in any non-development environment.**
-
-| Email                        | Password  |
-| ---------------------------- | --------- |
-| admin@transparenterp.org     | admin123  |
-
-## Project Structure
-
-```
-├── src/                    # React frontend
-│   ├── App.jsx             # Routes and app shell
-│   ├── AuthContext.jsx      # Authentication state
-│   ├── api.js              # API client
-│   └── pages/              # Page components
-│       ├── Landing.jsx     # Public homepage
-│       ├── Login.jsx       # Login / register
-│       ├── DashboardLayout.jsx
-│       ├── Dashboard.jsx   # Financial overview
-│       ├── Finance.jsx     # Transaction management
-│       ├── Donors.jsx      # Donor management
-│       ├── Programs.jsx    # Program tracking
-│       ├── PublicLedger.jsx # Public transparency portal
-│       └── Verify.jsx      # Transaction verification
-├── server/                 # Express backend
-│   ├── index.cjs           # Server entry point
-│   ├── db.cjs              # SQLite setup and schema
-│   ├── blockchain.cjs      # Blockchain ledger layer
-│   └── routes/             # API route handlers
-│       ├── auth.cjs        # Authentication
-│       ├── transactions.cjs
-│       ├── donors.cjs
-│       ├── programs.cjs
-│       └── public.cjs      # Public (no-auth) endpoints
-└── package.json
-```
-
-## API Endpoints
-
-### Authenticated (require JWT)
-
-| Method | Path                        | Description               |
-| ------ | --------------------------- | ------------------------- |
-| POST   | `/api/auth/login`           | Log in                    |
-| POST   | `/api/auth/register`        | Register a new user       |
-| GET    | `/api/auth/me`              | Get current user profile  |
-| GET    | `/api/transactions`         | List transactions         |
-| POST   | `/api/transactions`         | Create a transaction      |
-| GET    | `/api/transactions/stats`   | Financial statistics      |
-| GET    | `/api/donors`               | List donors               |
-| POST   | `/api/donors`               | Create a donor            |
-| GET    | `/api/programs`             | List programs             |
-| POST   | `/api/programs`             | Create a program          |
-
-### Public (no auth required)
-
-| Method | Path                        | Description                        |
-| ------ | --------------------------- | ---------------------------------- |
-| GET    | `/api/public/stats`         | Public financial statistics        |
-| GET    | `/api/public/ledger`        | Browse the immutable ledger        |
-| GET    | `/api/public/verify/chain`  | Verify full chain integrity        |
-| GET    | `/api/public/verify/:txId`  | Verify a single transaction        |
-| GET    | `/api/public/programs`      | View public program information    |
-| GET    | `/api/public/export`        | Export ledger data                 |
-| GET    | `/api/health`               | Health check                       |
->>>>>>> 702e200be0c30736d713cd26e1c26b32117ba838

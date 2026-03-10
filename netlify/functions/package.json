@@ -1,0 +1,12 @@
+{
+  "name": "chainfund-functions",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.8",
+    "bcryptjs": "^3.0.3",
+    "jsonwebtoken": "^9.0.3",
+    "uuid": "^13.0.0",
+    "@solana/web3.js": "^1.98.4"
+  }
+}

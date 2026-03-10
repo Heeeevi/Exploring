@@ -35,3 +35,7 @@ server/data/*.db-wal
 
 # Solana keypair (sensitive)
 solana/keypair.json
+
+# Test/seed utility scripts
+test-*.cjs
+seed-supabase.cjs

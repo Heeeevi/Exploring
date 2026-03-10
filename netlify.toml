@@ -1,25 +1,112 @@
 # ============================================
 # ChainFund — Netlify Deployment Configuration
 # ============================================
-# Netlify hosts the Vite/React SPA (frontend).
-# The Express + SQLite backend must be hosted separately
-# (Railway, Render, Fly.io, etc.).
+# Frontend: Vite/React SPA → Netlify CDN
+# Backend:  Netlify Functions (serverless) → Supabase PostgreSQL
+# Blockchain: Solana devnet anchoring via Netlify Functions
 #
-# After deploying the backend, set the environment variable:
-#   VITE_API_URL = https://your-backend-url.com/api
-# in Netlify → Site Settings → Build & Deploy → Environment Variables.
+# Required env vars (set in Netlify dashboard):
+#   SUPABASE_URL             = https://xxx.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY = eyJhbGci...
+#   JWT_SECRET               = your-random-secret
+#   SOLANA_KEYPAIR           = [1,2,3,...] (JSON array of secret key bytes)
+#   SOLANA_NETWORK           = devnet
 # ============================================
 
 [build]
-  command   = "npm run build"
+  command   = "npm install && cd netlify/functions && npm install && cd ../.. && npm run build"
   publish   = "dist"
+  functions = "netlify/functions"
+
+# Functions configuration
+[functions]
+  node_bundler = "nft"
+  included_files = ["netlify/functions/lib/**"]
 
 # Environment variables for the build
 [build.environment]
   NODE_VERSION = "20"
-  # VITE_API_URL is set via Netlify UI (site settings)
 
-# SPA fallback — all routes go to index.html
+# ---- API Redirects → Netlify Functions ----
+# Auth
+[[redirects]]
+  from   = "/api/auth/*"
+  to     = "/.netlify/functions/auth/:splat"
+  status = 200
+
+# Transactions
+[[redirects]]
+  from   = "/api/transactions/*"
+  to     = "/.netlify/functions/transactions/:splat"
+  status = 200
+
+[[redirects]]
+  from   = "/api/transactions"
+  to     = "/.netlify/functions/transactions"
+  status = 200
+
+# Donors
+[[redirects]]
+  from   = "/api/donors/*"
+  to     = "/.netlify/functions/donors/:splat"
+  status = 200
+
+[[redirects]]
+  from   = "/api/donors"
+  to     = "/.netlify/functions/donors"
+  status = 200
+
+# Programs
+[[redirects]]
+  from   = "/api/programs/*"
+  to     = "/.netlify/functions/programs/:splat"
+  status = 200
+
+[[redirects]]
+  from   = "/api/programs"
+  to     = "/.netlify/functions/programs"
+  status = 200
+
+# Solana
+[[redirects]]
+  from   = "/api/solana/*"
+  to     = "/.netlify/functions/solana/:splat"
+  status = 200
+
+[[redirects]]
+  from   = "/api/solana"
+  to     = "/.netlify/functions/solana"
+  status = 200
+
+# Activity
+[[redirects]]
+  from   = "/api/activity/*"
+  to     = "/.netlify/functions/activity/:splat"
+  status = 200
+
+[[redirects]]
+  from   = "/api/activity"
+  to     = "/.netlify/functions/activity"
+  status = 200
+
+# Public
+[[redirects]]
+  from   = "/api/public/*"
+  to     = "/.netlify/functions/public/:splat"
+  status = 200
+
+[[redirects]]
+  from   = "/api/public"
+  to     = "/.netlify/functions/public"
+  status = 200
+
+# Health
+[[redirects]]
+  from   = "/api/health"
+  to     = "/.netlify/functions/health"
+  status = 200
+
+# ---- SPA fallback (must be LAST) ----
 [[redirects]]
   from   = "/*"
   to     = "/index.html"
