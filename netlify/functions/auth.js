@@ -14,6 +14,15 @@ exports.handler = async (event) => {
     const segments = parsePath(event);
     const method = event.httpMethod;
 
+    // Debug logging
+    console.log('AUTH DEBUG:', JSON.stringify({
+        path: event.path,
+        rawPath: event.rawPath,
+        rawUrl: event.rawUrl,
+        httpMethod: method,
+        segments,
+    }));
+
     try {
         // POST /auth/login
         if (method === 'POST' && segments[0] === 'login') {
