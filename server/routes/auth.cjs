@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('../db.cjs');
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'transparent-erp-secret-key-change-in-prod';
+const JWT_SECRET = process.env.JWT_SECRET || 'chainfund-secret-key-change-in-prod';
 
 // Middleware to verify JWT
 function authMiddleware(req, res, next) {

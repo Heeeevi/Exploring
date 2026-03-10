@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
-import { Search, Shield, Download, ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import { Search, Shield, Download, ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight, ExternalLink, HelpCircle, Anchor } from 'lucide-react';
 
 function formatUSD(n) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
@@ -13,9 +13,11 @@ export default function PublicLedger() {
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
+    const [solana, setSolana] = useState(null);
 
     useEffect(() => {
         api.publicStats().then(setStats);
+        api.solanaStatus().then(setSolana).catch(() => { });
     }, []);
 
     useEffect(() => {
@@ -29,7 +31,7 @@ export default function PublicLedger() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `transparent-erp-export-${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = `chainfund-export-${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -45,7 +47,7 @@ export default function PublicLedger() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `transparent-erp-export-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.download = `chainfund-export-${new Date().toISOString().slice(0, 10)}.csv`;
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -64,10 +66,13 @@ export default function PublicLedger() {
             <nav className="public-nav">
                 <div className="landing-logo">
                     <div className="logo-icon">🔗</div>
-                    <span>TransparentERP</span>
+                    <span>ChainFund</span>
                     <span className="badge badge-chain" style={{ marginLeft: 8 }}>Public Ledger</span>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
+                    <Link to="/public/how-it-works" className="btn btn-ghost btn-sm">
+                        <HelpCircle size={14} /> Cara Kerja
+                    </Link>
                     <Link to="/public/verify" className="btn btn-secondary btn-sm">
                         <Shield size={14} /> Verify Transaction
                     </Link>
@@ -89,6 +94,30 @@ export default function PublicLedger() {
                             Chain Integrity: {stats.chainIntegrity.valid ? '✓ Verified' : '✗ BROKEN'} — {stats.chainIntegrity.totalEntries} entries,
                             {stats.chainIntegrity.valid ? ' all hashes intact' : ` broken at entry ${stats.chainIntegrity.brokenAt}`}
                         </span>
+                    </div>
+                )}
+
+                {/* Solana Proof Banner */}
+                {solana && solana.totalAnchors > 0 && (
+                    <div style={{
+                        display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderRadius: 12, marginBottom: 20,
+                        background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.15)',
+                    }}>
+                        <Anchor size={20} style={{ color: 'var(--accent-purple)', flexShrink: 0 }} />
+                        <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 600, fontSize: '0.88rem', marginBottom: 2 }}>
+                                On-Chain Proof: {solana.anchoredEntries}/{solana.totalLedgerEntries} entries anchored to Solana
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                {solana.totalAnchors} Merkle root(s) permanently recorded on Solana blockchain
+                            </div>
+                        </div>
+                        {solana.lastAnchor?.explorerUrl && (
+                            <a href={solana.lastAnchor.explorerUrl} target="_blank" rel="noopener noreferrer"
+                                className="btn btn-sm" style={{ background: 'rgba(168,85,247,0.15)', color: 'var(--accent-purple)', border: '1px solid rgba(168,85,247,0.2)' }}>
+                                <ExternalLink size={12} /> Verify on Solana
+                            </a>
+                        )}
                     </div>
                 )}
 

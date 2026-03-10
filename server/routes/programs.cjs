@@ -29,6 +29,9 @@ router.post('/', authMiddleware, (req, res) => {
     db.prepare('INSERT INTO programs (id, name, description, budget, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?)')
         .run(id, name, description || null, budget || 0, start_date || null, end_date || null);
 
+    db.prepare('INSERT INTO activity_log (user_id, user_name, action, entity_type, entity_id, details) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(req.user.id, req.user.name, 'create', 'program', id, `Created program: ${name}`);
+
     res.status(201).json({ id, name, description, budget: budget || 0, spent: 0, status: 'active' });
 });
 
@@ -68,7 +71,28 @@ router.put('/:id', authMiddleware, (req, res) => {
             req.params.id
         );
 
+    db.prepare('INSERT INTO activity_log (user_id, user_name, action, entity_type, entity_id, details) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(req.user.id, req.user.name, 'update', 'program', req.params.id, `Updated program: ${name || existing.name}`);
+
     res.json({ id: req.params.id, message: 'Updated' });
+});
+
+// DELETE /api/programs/:id
+router.delete('/:id', authMiddleware, (req, res) => {
+    const existing = db.prepare('SELECT * FROM programs WHERE id = ?').get(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Program not found' });
+
+    const txCount = db.prepare('SELECT COUNT(*) as count FROM transactions WHERE program_id = ?').get(req.params.id).count;
+    if (txCount > 0) {
+        return res.status(400).json({ error: `Cannot delete program with ${txCount} linked transaction(s). Remove or reassign them first.` });
+    }
+
+    db.prepare('DELETE FROM programs WHERE id = ?').run(req.params.id);
+
+    db.prepare('INSERT INTO activity_log (user_id, user_name, action, entity_type, entity_id, details) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(req.user.id, req.user.name, 'delete', 'program', req.params.id, `Deleted program: ${existing.name}`);
+
+    res.json({ message: 'Program deleted' });
 });
 
 module.exports = router;

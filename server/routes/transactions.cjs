@@ -6,6 +6,10 @@ const { authMiddleware } = require('./auth.cjs');
 
 const router = express.Router();
 
+function formatAmount(n) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
+}
+
 // GET /api/transactions - list all transactions
 router.get('/', authMiddleware, (req, res) => {
   const { type, program_id, donor_id, page = 1, limit = 50 } = req.query;
@@ -119,6 +123,10 @@ router.post('/', authMiddleware, (req, res) => {
   const txRecord = { id, type, amount, currency: currency || 'USD', description, category, donor_id, program_id, created_by: req.user.id, reference_number, created_at: now };
   const { hash, prevHash } = blockchain.recordToLedger(txRecord);
 
+  // Activity log
+  db.prepare('INSERT INTO activity_log (user_id, user_name, action, entity_type, entity_id, details) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(req.user.id, req.user.name, 'create', 'transaction', id, `${type} ${formatAmount(amount)} — ${description}`);
+
   res.status(201).json({
     id, type, amount, currency: currency || 'USD', description, category,
     donor_id, program_id, reference_number,
@@ -142,6 +150,27 @@ router.get('/:id', authMiddleware, (req, res) => {
 
   const proof = blockchain.verifyTransaction(tx.id);
   res.json({ ...tx, blockchainProof: proof });
+});
+
+// PUT /api/transactions/:id - update a transaction (description, category, donor, program only — amount/type are immutable once hashed)
+router.put('/:id', authMiddleware, (req, res) => {
+  const { description, category, donor_id, program_id } = req.body;
+  const existing = db.prepare('SELECT * FROM transactions WHERE id = ?').get(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'Transaction not found' });
+
+  db.prepare(`UPDATE transactions SET description = ?, category = ?, donor_id = ?, program_id = ? WHERE id = ?`)
+    .run(
+      description !== undefined ? description : existing.description,
+      category !== undefined ? category : existing.category,
+      donor_id !== undefined ? (donor_id || null) : existing.donor_id,
+      program_id !== undefined ? (program_id || null) : existing.program_id,
+      req.params.id
+    );
+
+  db.prepare('INSERT INTO activity_log (user_id, user_name, action, entity_type, entity_id, details) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(req.user.id, req.user.name, 'update', 'transaction', req.params.id, `Updated transaction: ${description || existing.description}`);
+
+  res.json({ id: req.params.id, message: 'Updated (amount & type are immutable once on-chain)' });
 });
 
 module.exports = router;

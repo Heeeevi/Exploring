@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
-import { Plus, ArrowUpRight, ArrowDownRight, X, Shield } from 'lucide-react';
+import { Plus, ArrowUpRight, ArrowDownRight, X, Shield, Pencil, Search } from 'lucide-react';
 
 function formatUSD(n) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
@@ -13,13 +13,19 @@ export default function Finance() {
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [editModal, setEditModal] = useState(null); // null or tx object
     const [form, setForm] = useState({ type: 'income', amount: '', description: '', category: '', donor_id: '', program_id: '', currency: 'USD' });
+    const [editForm, setEditForm] = useState({ description: '', category: '', donor_id: '', program_id: '' });
     const [submitting, setSubmitting] = useState(false);
     const [toast, setToast] = useState(null);
+    const [filterType, setFilterType] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
 
     const load = () => {
         setLoading(true);
-        Promise.all([api.getTransactions(), api.getDonors(), api.getPrograms()])
+        const params = [];
+        if (filterType) params.push(`type=${filterType}`);
+        Promise.all([api.getTransactions(params.join('&')), api.getDonors(), api.getPrograms()])
             .then(([txData, d, p]) => {
                 setTransactions(txData.transactions);
                 setTotal(txData.total);
@@ -29,7 +35,12 @@ export default function Finance() {
             .finally(() => setLoading(false));
     };
 
-    useEffect(() => { load(); }, []);
+    useEffect(() => { load(); }, [filterType]);
+
+    const showToast = (type, message) => {
+        setToast({ type, message });
+        setTimeout(() => setToast(null), 4000);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -41,16 +52,48 @@ export default function Finance() {
             });
             setShowModal(false);
             setForm({ type: 'income', amount: '', description: '', category: '', donor_id: '', program_id: '', currency: 'USD' });
-            setToast({ type: 'success', message: `Transaction recorded! Hash: ${result.blockchain.hash.slice(0, 16)}...` });
-            setTimeout(() => setToast(null), 4000);
+            showToast('success', `Transaction recorded! Hash: ${result.blockchain.hash.slice(0, 16)}...`);
             load();
         } catch (err) {
-            setToast({ type: 'error', message: err.message });
-            setTimeout(() => setToast(null), 3000);
+            showToast('error', err.message);
         } finally {
             setSubmitting(false);
         }
     };
+
+    const openEdit = (tx) => {
+        setEditModal(tx);
+        setEditForm({
+            description: tx.description,
+            category: tx.category || '',
+            donor_id: tx.donor_id || '',
+            program_id: tx.program_id || '',
+        });
+    };
+
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            await api.updateTransaction(editModal.id, editForm);
+            setEditModal(null);
+            showToast('success', 'Transaction updated (amount & type remain immutable on-chain)');
+            load();
+        } catch (err) {
+            showToast('error', err.message);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const filtered = searchTerm
+        ? transactions.filter(tx =>
+            tx.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            tx.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            tx.donor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            tx.program_name?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        : transactions;
 
     return (
         <>
@@ -64,6 +107,19 @@ export default function Finance() {
                 </button>
             </div>
             <div className="page-body">
+                {/* Filters */}
+                <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div className="search-bar" style={{ flex: 1, minWidth: 200 }}>
+                        <Search size={16} style={{ color: 'var(--text-muted)' }} />
+                        <input placeholder="Search transactions..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                        <button className={`btn btn-sm ${filterType === '' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setFilterType('')}>All</button>
+                        <button className={`btn btn-sm ${filterType === 'income' ? 'btn-success' : 'btn-secondary'}`} onClick={() => setFilterType('income')}>Income</button>
+                        <button className={`btn btn-sm ${filterType === 'expense' ? 'btn-danger' : 'btn-secondary'}`} onClick={() => setFilterType('expense')}>Expenses</button>
+                    </div>
+                </div>
+
                 <div className="card">
                     <div className="card-header">
                         <h2>All Transactions ({total})</h2>
@@ -80,21 +136,22 @@ export default function Finance() {
                                     <th>Donor</th>
                                     <th>Blockchain Hash</th>
                                     <th>Date</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {loading ? (
-                                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>Loading...</td></tr>
-                                ) : transactions.length === 0 ? (
-                                    <tr><td colSpan={8}>
+                                    <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>Loading...</td></tr>
+                                ) : filtered.length === 0 ? (
+                                    <tr><td colSpan={9}>
                                         <div className="empty-state">
                                             <div className="icon">💰</div>
-                                            <h3>No transactions yet</h3>
-                                            <p>Click "New Transaction" to record your first income or expense.</p>
+                                            <h3>No transactions found</h3>
+                                            <p>{searchTerm ? 'Try a different search term.' : 'Click "New Transaction" to record your first income or expense.'}</p>
                                         </div>
                                     </td></tr>
                                 ) : (
-                                    transactions.map(tx => (
+                                    filtered.map(tx => (
                                         <tr key={tx.id}>
                                             <td>
                                                 <span className={`badge badge-${tx.type}`}>
@@ -120,6 +177,11 @@ export default function Finance() {
                                             <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
                                                 {new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                             </td>
+                                            <td>
+                                                <button className="btn btn-ghost btn-sm" onClick={() => openEdit(tx)} title="Edit metadata" style={{ padding: '4px 8px' }}>
+                                                    <Pencil size={13} />
+                                                </button>
+                                            </td>
                                         </tr>
                                     ))
                                 )}
@@ -129,6 +191,7 @@ export default function Finance() {
                 </div>
             </div>
 
+            {/* Create Modal */}
             {showModal && (
                 <div className="modal-overlay" onClick={() => setShowModal(false)}>
                     <div className="modal" onClick={e => e.stopPropagation()}>
@@ -186,6 +249,59 @@ export default function Finance() {
                                     {submitting ? 'Recording...' : <>
                                         <Shield size={14} /> Record & Hash
                                     </>}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {editModal && (
+                <div className="modal-overlay" onClick={() => setEditModal(null)}>
+                    <div className="modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Edit Transaction</h2>
+                            <button className="btn btn-ghost btn-sm" onClick={() => setEditModal(null)}><X size={18} /></button>
+                        </div>
+                        <form onSubmit={handleEditSubmit}>
+                            <div className="modal-body">
+                                <div style={{
+                                    padding: '10px 14px', borderRadius: 8, marginBottom: 16, fontSize: '0.82rem',
+                                    background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: 'var(--text-secondary)'
+                                }}>
+                                    <Shield size={13} style={{ display: 'inline', marginRight: 6, verticalAlign: -2 }} />
+                                    Amount ({formatUSD(editModal.amount)}) and type ({editModal.type}) are <strong>immutable</strong> — they're sealed on the blockchain.
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Description</label>
+                                    <textarea className="form-textarea" value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} required />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Category</label>
+                                    <input className="form-input" value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })} />
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label className="form-label">Link to Donor</label>
+                                        <select className="form-select" value={editForm.donor_id} onChange={e => setEditForm({ ...editForm, donor_id: e.target.value })}>
+                                            <option value="">— None —</option>
+                                            {donors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Link to Program</label>
+                                        <select className="form-select" value={editForm.program_id} onChange={e => setEditForm({ ...editForm, program_id: e.target.value })}>
+                                            <option value="">— None —</option>
+                                            {programs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditModal(null)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary btn-sm" disabled={submitting}>
+                                    {submitting ? 'Saving...' : 'Save Changes'}
                                 </button>
                             </div>
                         </form>

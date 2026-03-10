@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 async function request(path, options = {}) {
     const token = localStorage.getItem('terp_token');
@@ -45,16 +45,21 @@ export const api = {
     getRecentChart: (days = 30) => request(`/transactions/recent-chart?days=${days}`),
     createTransaction: (data) => request('/transactions', { method: 'POST', body: JSON.stringify(data) }),
     getTransaction: (id) => request(`/transactions/${id}`),
+    updateTransaction: (id, data) => request(`/transactions/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 
     // Donors
     getDonors: () => request('/donors'),
     createDonor: (data) => request('/donors', { method: 'POST', body: JSON.stringify(data) }),
     getDonor: (id) => request(`/donors/${id}`),
+    updateDonor: (id, data) => request(`/donors/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteDonor: (id) => request(`/donors/${id}`, { method: 'DELETE' }),
 
     // Programs
     getPrograms: () => request('/programs'),
     createProgram: (data) => request('/programs', { method: 'POST', body: JSON.stringify(data) }),
     getProgram: (id) => request(`/programs/${id}`),
+    updateProgram: (id, data) => request(`/programs/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteProgram: (id) => request(`/programs/${id}`, { method: 'DELETE' }),
 
     // Public
     publicStats: () => request('/public/stats'),
@@ -63,4 +68,15 @@ export const api = {
     publicVerifyTx: (txId) => request(`/public/verify/${txId}`),
     publicPrograms: () => request('/public/programs'),
     publicExport: () => request('/public/export'),
+
+    // Solana Anchoring
+    solanaAnchor: () => request('/solana/anchor', { method: 'POST' }),
+    solanaAnchors: () => request('/solana/anchors'),
+    solanaVerify: (signature) => request(`/solana/verify/${signature}`),
+    solanaWallet: () => request('/solana/wallet'),
+    solanaStatus: () => request('/solana/status'),
+
+    // Activity Log
+    getActivities: (page = 1, limit = 50, entityType = '') => request(`/activity?page=${page}&limit=${limit}${entityType ? '&entity_type=' + entityType : ''}`),
+    getActivityStats: () => request('/activity/stats'),
 };

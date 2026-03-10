@@ -10,6 +10,10 @@ import Donors from './pages/Donors';
 import Programs from './pages/Programs';
 import PublicLedger from './pages/PublicLedger';
 import Verify from './pages/Verify';
+import Guide from './pages/Guide';
+import HowItWorks from './pages/HowItWorks';
+import SolanaAnchor from './pages/SolanaAnchor';
+import ActivityLog from './pages/ActivityLog';
 
 function ProtectedRoute({ children }) {
     const { user } = useAuth();
@@ -33,8 +37,12 @@ function App() {
                         <Route path="finance" element={<Finance />} />
                         <Route path="donors" element={<Donors />} />
                         <Route path="programs" element={<Programs />} />
+                        <Route path="guide" element={<Guide />} />
+                        <Route path="solana" element={<SolanaAnchor />} />
+                        <Route path="activity" element={<ActivityLog />} />
                     </Route>
                     <Route path="/public" element={<PublicLedger />} />
+                    <Route path="/public/how-it-works" element={<HowItWorks />} />
                     <Route path="/public/verify" element={<Verify />} />
                     <Route path="/public/verify/:txId" element={<Verify />} />
                     <Route path="*" element={<Navigate to="/" replace />} />

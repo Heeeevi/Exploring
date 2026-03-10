@@ -27,6 +27,9 @@ router.post('/', authMiddleware, (req, res) => {
     db.prepare('INSERT INTO donors (id, name, email, organization, country) VALUES (?, ?, ?, ?, ?)')
         .run(id, name, email || null, organization || null, country || null);
 
+    db.prepare('INSERT INTO activity_log (user_id, user_name, action, entity_type, entity_id, details) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(req.user.id, req.user.name, 'create', 'donor', id, `Added donor: ${name}`);
+
     res.status(201).json({ id, name, email, organization, country, total_donated: 0 });
 });
 
@@ -53,9 +56,32 @@ router.put('/:id', authMiddleware, (req, res) => {
     if (!existing) return res.status(404).json({ error: 'Donor not found' });
 
     db.prepare('UPDATE donors SET name = ?, email = ?, organization = ?, country = ?, updated_at = datetime(\'now\') WHERE id = ?')
-        .run(name || existing.name, email || existing.email, organization || existing.organization, country || existing.country, req.params.id);
+        .run(name || existing.name, email !== undefined ? email : existing.email, organization !== undefined ? organization : existing.organization, country !== undefined ? country : existing.country, req.params.id);
+
+    // Activity log
+    db.prepare('INSERT INTO activity_log (user_id, user_name, action, entity_type, entity_id, details) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(req.user.id, req.user.name, 'update', 'donor', req.params.id, `Updated donor: ${name || existing.name}`);
 
     res.json({ id: req.params.id, name: name || existing.name, email, organization, country });
+});
+
+// DELETE /api/donors/:id
+router.delete('/:id', authMiddleware, (req, res) => {
+    const existing = db.prepare('SELECT * FROM donors WHERE id = ?').get(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Donor not found' });
+
+    // Check for linked transactions
+    const txCount = db.prepare('SELECT COUNT(*) as count FROM transactions WHERE donor_id = ?').get(req.params.id).count;
+    if (txCount > 0) {
+        return res.status(400).json({ error: `Cannot delete donor with ${txCount} linked transaction(s). Remove or reassign them first.` });
+    }
+
+    db.prepare('DELETE FROM donors WHERE id = ?').run(req.params.id);
+
+    db.prepare('INSERT INTO activity_log (user_id, user_name, action, entity_type, entity_id, details) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(req.user.id, req.user.name, 'delete', 'donor', req.params.id, `Deleted donor: ${existing.name}`);
+
+    res.json({ message: 'Donor deleted' });
 });
 
 module.exports = router;

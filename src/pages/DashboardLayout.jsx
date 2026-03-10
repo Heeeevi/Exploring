@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { LayoutDashboard, DollarSign, Users, FolderKanban, Globe, LogOut, Shield } from 'lucide-react';
+import { LayoutDashboard, DollarSign, Users, FolderKanban, Globe, LogOut, Shield, BookOpen, Anchor, Activity } from 'lucide-react';
 
 export default function DashboardLayout() {
     const { user, logout } = useAuth();
@@ -17,7 +17,7 @@ export default function DashboardLayout() {
             <aside className="sidebar">
                 <div className="sidebar-logo">
                     <div className="logo-icon">🔗</div>
-                    TransparentERP
+                    ChainFund
                 </div>
                 <nav className="sidebar-nav">
                     <div className="sidebar-section-title">Main</div>
@@ -37,8 +37,20 @@ export default function DashboardLayout() {
                         <FolderKanban size={20} className="icon" />
                         Programs
                     </NavLink>
+                    <NavLink to="/dashboard/guide" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+                        <BookOpen size={20} className="icon" />
+                        Panduan
+                    </NavLink>
 
                     <div className="sidebar-section-title">Transparency</div>
+                    <NavLink to="/dashboard/solana" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+                        <Anchor size={20} className="icon" />
+                        Solana Anchor
+                    </NavLink>
+                    <NavLink to="/dashboard/activity" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+                        <Activity size={20} className="icon" />
+                        Activity Log
+                    </NavLink>
                     <a href="/public" target="_blank" className="sidebar-link">
                         <Globe size={20} className="icon" />
                         Public Ledger

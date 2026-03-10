@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Pencil, Trash2 } from 'lucide-react';
 
 function formatUSD(n) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
@@ -10,8 +10,11 @@ export default function Programs() {
     const [programs, setPrograms] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [editModal, setEditModal] = useState(null);
     const [form, setForm] = useState({ name: '', description: '', budget: '', start_date: '', end_date: '' });
+    const [editForm, setEditForm] = useState({ name: '', description: '', budget: '', status: '', start_date: '', end_date: '' });
     const [submitting, setSubmitting] = useState(false);
+    const [toast, setToast] = useState(null);
 
     const load = () => {
         setLoading(true);
@@ -20,6 +23,11 @@ export default function Programs() {
 
     useEffect(() => { load(); }, []);
 
+    const showToast = (type, message) => {
+        setToast({ type, message });
+        setTimeout(() => setToast(null), 4000);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
@@ -27,9 +35,50 @@ export default function Programs() {
             await api.createProgram({ ...form, budget: parseFloat(form.budget) || 0 });
             setShowModal(false);
             setForm({ name: '', description: '', budget: '', start_date: '', end_date: '' });
+            showToast('success', 'Program created');
             load();
+        } catch (err) {
+            showToast('error', err.message);
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const openEdit = (p) => {
+        setEditModal(p);
+        setEditForm({
+            name: p.name,
+            description: p.description || '',
+            budget: p.budget || '',
+            status: p.status || 'active',
+            start_date: p.start_date || '',
+            end_date: p.end_date || '',
+        });
+    };
+
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            await api.updateProgram(editModal.id, { ...editForm, budget: parseFloat(editForm.budget) || 0 });
+            setEditModal(null);
+            showToast('success', 'Program updated');
+            load();
+        } catch (err) {
+            showToast('error', err.message);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (p) => {
+        if (!confirm(`Delete program "${p.name}"? This cannot be undone.`)) return;
+        try {
+            await api.deleteProgram(p.id);
+            showToast('success', 'Program deleted');
+            load();
+        } catch (err) {
+            showToast('error', err.message);
         }
     };
 
@@ -63,8 +112,16 @@ export default function Programs() {
                                 <div key={p.id} className="card animate-in" style={{ transition: 'all 0.2s' }}>
                                     <div className="card-body">
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                                            <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{p.name}</h3>
-                                            <span className={`badge badge-${p.status === 'active' ? 'active' : 'completed'}`}>{p.status}</span>
+                                            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, flex: 1 }}>{p.name}</h3>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                <span className={`badge badge-${p.status === 'active' ? 'active' : 'completed'}`}>{p.status}</span>
+                                                <button className="btn btn-ghost btn-sm" onClick={() => openEdit(p)} title="Edit" style={{ padding: '3px 6px' }}>
+                                                    <Pencil size={13} />
+                                                </button>
+                                                <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(p)} title="Delete" style={{ padding: '3px 6px', color: 'var(--accent-red)' }}>
+                                                    <Trash2 size={13} />
+                                                </button>
+                                            </div>
                                         </div>
                                         {p.description && <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.5 }}>{p.description}</p>}
 
@@ -111,6 +168,7 @@ export default function Programs() {
                 )}
             </div>
 
+            {/* Create Modal */}
             {showModal && (
                 <div className="modal-overlay" onClick={() => setShowModal(false)}>
                     <div className="modal" onClick={e => e.stopPropagation()}>
@@ -151,6 +209,60 @@ export default function Programs() {
                     </div>
                 </div>
             )}
+
+            {/* Edit Modal */}
+            {editModal && (
+                <div className="modal-overlay" onClick={() => setEditModal(null)}>
+                    <div className="modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Edit Program</h2>
+                            <button className="btn btn-ghost btn-sm" onClick={() => setEditModal(null)}><X size={18} /></button>
+                        </div>
+                        <form onSubmit={handleEditSubmit}>
+                            <div className="modal-body">
+                                <div className="form-group">
+                                    <label className="form-label">Program Name *</label>
+                                    <input className="form-input" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} required />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Description</label>
+                                    <textarea className="form-textarea" value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} />
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label className="form-label">Budget (USD)</label>
+                                        <input className="form-input" type="number" step="0.01" min="0" value={editForm.budget} onChange={e => setEditForm({ ...editForm, budget: e.target.value })} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Status</label>
+                                        <select className="form-select" value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
+                                            <option value="active">Active</option>
+                                            <option value="completed">Completed</option>
+                                            <option value="paused">Paused</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label className="form-label">Start Date</label>
+                                        <input className="form-input" type="date" value={editForm.start_date} onChange={e => setEditForm({ ...editForm, start_date: e.target.value })} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">End Date</label>
+                                        <input className="form-input" type="date" value={editForm.end_date} onChange={e => setEditForm({ ...editForm, end_date: e.target.value })} />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditModal(null)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary btn-sm" disabled={submitting}>{submitting ? 'Saving...' : 'Save Changes'}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {toast && <div className={`toast ${toast.type}`}>{toast.message}</div>}
         </>
     );
 }

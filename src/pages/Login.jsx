@@ -6,7 +6,7 @@ import { LogIn, UserPlus } from 'lucide-react';
 export default function Login() {
     const [isRegister, setIsRegister] = useState(false);
     const [name, setName] = useState('');
-    const [email, setEmail] = useState('admin@transparenterp.org');
+    const [email, setEmail] = useState('admin@chainfund.org');
     const [password, setPassword] = useState('admin123');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -37,7 +37,7 @@ export default function Login() {
                 <div style={{ textAlign: 'center', marginBottom: 24 }}>
                     <div className="landing-logo" style={{ justifyContent: 'center', marginBottom: 16 }}>
                         <div className="logo-icon">🔗</div>
-                        TransparentERP
+                        ChainFund
                     </div>
                 </div>
                 <h1>{isRegister ? 'Create Account' : 'Welcome Back'}</h1>

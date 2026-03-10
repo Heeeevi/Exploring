@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
+import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { TrendingUp, TrendingDown, Users, FolderKanban, Link as LinkIcon, Shield } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, FolderKanban, Link as LinkIcon, Shield, Anchor, ExternalLink, Clock, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 function formatUSD(n) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
@@ -10,11 +11,23 @@ function formatUSD(n) {
 export default function Dashboard() {
     const [stats, setStats] = useState(null);
     const [chartData, setChartData] = useState([]);
+    const [solana, setSolana] = useState(null);
+    const [recentTx, setRecentTx] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        Promise.all([api.getTransactionStats(), api.getRecentChart(30)])
-            .then(([s, c]) => { setStats(s); setChartData(c); })
+        Promise.all([
+            api.getTransactionStats(),
+            api.getRecentChart(30),
+            api.solanaStatus().catch(() => null),
+            api.getTransactions('limit=5').catch(() => ({ transactions: [] })),
+        ])
+            .then(([s, c, sol, tx]) => {
+                setStats(s);
+                setChartData(c);
+                setSolana(sol);
+                setRecentTx(tx.transactions || []);
+            })
             .finally(() => setLoading(false));
     }, []);
 
@@ -86,43 +99,139 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    <div className="card animate-in">
-                        <div className="card-header">
-                            <h2>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <Shield size={18} style={{ color: 'var(--accent-purple)' }} />
-                                    Blockchain Status
-                                </div>
-                            </h2>
-                        </div>
-                        <div className="card-body">
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                                <div className={`chain-status ${stats?.chainStats?.totalEntries >= 0 ? 'valid' : 'invalid'}`}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                        {/* Blockchain Status */}
+                        <div className="card animate-in" style={{ flex: 1 }}>
+                            <div className="card-header">
+                                <h2>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <Shield size={18} style={{ color: 'var(--accent-purple)' }} />
+                                        Blockchain Status
+                                    </div>
+                                </h2>
+                            </div>
+                            <div className="card-body" style={{ padding: '16px 20px' }}>
+                                <div className={`chain-status ${stats?.chainStats?.totalEntries >= 0 ? 'valid' : 'invalid'}`} style={{ marginBottom: 12 }}>
                                     <span className="status-dot"></span>
                                     Chain Integrity: Verified ✓
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                                        <span style={{ color: 'var(--text-muted)' }}>Total Ledger Entries</span>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: '0.85rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ color: 'var(--text-muted)' }}>Ledger Entries</span>
                                         <span style={{ fontWeight: 600 }}>{stats?.chainStats?.totalEntries || 0}</span>
                                     </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                                        <span style={{ color: 'var(--text-muted)' }}>Total Income Recorded</span>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ color: 'var(--text-muted)' }}>On-chain Income</span>
                                         <span style={{ fontWeight: 600, color: 'var(--accent-green)' }}>{formatUSD(stats?.chainStats?.totalIncome || 0)}</span>
                                     </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                                        <span style={{ color: 'var(--text-muted)' }}>Total Expense Recorded</span>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ color: 'var(--text-muted)' }}>On-chain Expense</span>
                                         <span style={{ fontWeight: 600, color: 'var(--accent-red)' }}>{formatUSD(stats?.chainStats?.totalExpense || 0)}</span>
                                     </div>
                                     {stats?.chainStats?.lastHash && (
-                                        <div style={{ marginTop: 8 }}>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>Latest Hash</div>
-                                            <div className="hash-display" style={{ maxWidth: '100%' }}>{stats.chainStats.lastHash}</div>
+                                        <div style={{ marginTop: 4 }}>
+                                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 2 }}>Latest Hash</div>
+                                            <div className="hash-display" style={{ maxWidth: '100%', fontSize: '0.72rem' }}>{stats.chainStats.lastHash}</div>
                                         </div>
                                     )}
                                 </div>
                             </div>
                         </div>
+
+                        {/* Solana Anchor Widget */}
+                        <div className="card animate-in" style={{ flex: 1, border: '1px solid rgba(168,85,247,0.15)' }}>
+                            <div className="card-header" style={{ paddingBottom: 8 }}>
+                                <h2>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <Anchor size={18} style={{ color: 'var(--accent-purple)' }} />
+                                        Solana Anchor
+                                    </div>
+                                </h2>
+                                <Link to="/dashboard/solana" className="btn btn-ghost btn-sm" style={{ fontSize: '0.75rem' }}>
+                                    Manage →
+                                </Link>
+                            </div>
+                            <div className="card-body" style={{ padding: '12px 20px' }}>
+                                {solana ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: '0.85rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ color: 'var(--text-muted)' }}>Total Anchors</span>
+                                            <span style={{ fontWeight: 600, color: 'var(--accent-purple)' }}>{solana.totalAnchors}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ color: 'var(--text-muted)' }}>Anchored</span>
+                                            <span style={{ fontWeight: 600, color: 'var(--accent-green)' }}>{solana.anchoredEntries}/{solana.totalLedgerEntries}</span>
+                                        </div>
+                                        {solana.unanchoredEntries > 0 && (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <span style={{ color: 'var(--accent-yellow)' }}>⚠ Pending</span>
+                                                <span style={{ fontWeight: 600, color: 'var(--accent-yellow)' }}>{solana.unanchoredEntries} entries</span>
+                                            </div>
+                                        )}
+                                        {solana.lastAnchor?.explorerUrl && (
+                                            <a href={solana.lastAnchor.explorerUrl} target="_blank" rel="noopener noreferrer"
+                                                style={{ fontSize: '0.78rem', color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                                                <ExternalLink size={11} /> View latest on Solana Explorer
+                                            </a>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Solana not configured</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Recent Transactions */}
+                <div className="card animate-in">
+                    <div className="card-header">
+                        <h2>Recent Transactions</h2>
+                        <Link to="/dashboard/finance" className="btn btn-ghost btn-sm" style={{ fontSize: '0.78rem' }}>View All →</Link>
+                    </div>
+                    <div className="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Program</th>
+                                    <th>Hash</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {recentTx.length === 0 ? (
+                                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>No transactions yet</td></tr>
+                                ) : recentTx.map(tx => (
+                                    <tr key={tx.id}>
+                                        <td>
+                                            <span className={`badge badge-${tx.type}`}>
+                                                {tx.type === 'income' ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                                                {tx.type}
+                                            </span>
+                                        </td>
+                                        <td style={{ fontWeight: 500, maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tx.description}</td>
+                                        <td style={{ fontWeight: 700, color: tx.type === 'income' ? 'var(--accent-green)' : 'var(--accent-red)' }}>
+                                            {tx.type === 'income' ? '+' : '-'}{formatUSD(tx.amount)}
+                                        </td>
+                                        <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{tx.program_name || '—'}</td>
+                                        <td>
+                                            {tx.blockchain_hash ? (
+                                                <div className="hash-display" title={tx.blockchain_hash} style={{ fontSize: '0.72rem' }}>
+                                                    <Shield size={9} style={{ display: 'inline', marginRight: 3 }} />
+                                                    {tx.blockchain_hash.slice(0, 12)}...
+                                                </div>
+                                            ) : '—'}
+                                        </td>
+                                        <td style={{ color: 'var(--text-muted)', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
+                                            {new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

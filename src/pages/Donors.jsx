@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
-import { Plus, X, Globe, Mail } from 'lucide-react';
+import { Plus, X, Globe, Mail, Pencil, Trash2 } from 'lucide-react';
 
 function formatUSD(n) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
@@ -10,8 +10,11 @@ export default function Donors() {
     const [donors, setDonors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [editModal, setEditModal] = useState(null);
     const [form, setForm] = useState({ name: '', email: '', organization: '', country: '' });
+    const [editForm, setEditForm] = useState({ name: '', email: '', organization: '', country: '' });
     const [submitting, setSubmitting] = useState(false);
+    const [toast, setToast] = useState(null);
 
     const load = () => {
         setLoading(true);
@@ -20,6 +23,11 @@ export default function Donors() {
 
     useEffect(() => { load(); }, []);
 
+    const showToast = (type, message) => {
+        setToast({ type, message });
+        setTimeout(() => setToast(null), 4000);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
@@ -27,9 +35,43 @@ export default function Donors() {
             await api.createDonor(form);
             setShowModal(false);
             setForm({ name: '', email: '', organization: '', country: '' });
+            showToast('success', 'Donor added successfully');
             load();
+        } catch (err) {
+            showToast('error', err.message);
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const openEdit = (d) => {
+        setEditModal(d);
+        setEditForm({ name: d.name, email: d.email || '', organization: d.organization || '', country: d.country || '' });
+    };
+
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            await api.updateDonor(editModal.id, editForm);
+            setEditModal(null);
+            showToast('success', 'Donor updated');
+            load();
+        } catch (err) {
+            showToast('error', err.message);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (d) => {
+        if (!confirm(`Delete donor "${d.name}"? This cannot be undone.`)) return;
+        try {
+            await api.deleteDonor(d.id);
+            showToast('success', 'Donor deleted');
+            load();
+        } catch (err) {
+            showToast('error', err.message);
         }
     };
 
@@ -57,13 +99,14 @@ export default function Donors() {
                                     <th>Total Donated</th>
                                     <th>Transactions</th>
                                     <th>Since</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {loading ? (
-                                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>Loading...</td></tr>
+                                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>Loading...</td></tr>
                                 ) : donors.length === 0 ? (
-                                    <tr><td colSpan={7}>
+                                    <tr><td colSpan={8}>
                                         <div className="empty-state">
                                             <div className="icon">👥</div>
                                             <h3>No donors yet</h3>
@@ -106,6 +149,16 @@ export default function Donors() {
                                             <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                                                 {new Date(d.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                                             </td>
+                                            <td>
+                                                <div style={{ display: 'flex', gap: 4 }}>
+                                                    <button className="btn btn-ghost btn-sm" onClick={() => openEdit(d)} title="Edit" style={{ padding: '4px 8px' }}>
+                                                        <Pencil size={13} />
+                                                    </button>
+                                                    <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(d)} title="Delete" style={{ padding: '4px 8px', color: 'var(--accent-red)' }}>
+                                                        <Trash2 size={13} />
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     ))
                                 )}
@@ -115,6 +168,7 @@ export default function Donors() {
                 </div>
             </div>
 
+            {/* Create Modal */}
             {showModal && (
                 <div className="modal-overlay" onClick={() => setShowModal(false)}>
                     <div className="modal" onClick={e => e.stopPropagation()}>
@@ -151,6 +205,46 @@ export default function Donors() {
                     </div>
                 </div>
             )}
+
+            {/* Edit Modal */}
+            {editModal && (
+                <div className="modal-overlay" onClick={() => setEditModal(null)}>
+                    <div className="modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Edit Donor</h2>
+                            <button className="btn btn-ghost btn-sm" onClick={() => setEditModal(null)}><X size={18} /></button>
+                        </div>
+                        <form onSubmit={handleEditSubmit}>
+                            <div className="modal-body">
+                                <div className="form-group">
+                                    <label className="form-label">Name *</label>
+                                    <input className="form-input" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} required />
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label className="form-label">Email</label>
+                                        <input className="form-input" type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Country</label>
+                                        <input className="form-input" value={editForm.country} onChange={e => setEditForm({ ...editForm, country: e.target.value })} />
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Organization</label>
+                                    <input className="form-input" value={editForm.organization} onChange={e => setEditForm({ ...editForm, organization: e.target.value })} />
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditModal(null)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary btn-sm" disabled={submitting}>{submitting ? 'Saving...' : 'Save Changes'}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {toast && <div className={`toast ${toast.type}`}>{toast.message}</div>}
         </>
     );
 }

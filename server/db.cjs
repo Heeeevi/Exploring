@@ -86,6 +86,17 @@ db.exec(`
     anchor_tx_hash TEXT,
     created_at TEXT DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS activity_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT REFERENCES users(id),
+    user_name TEXT,
+    action TEXT NOT NULL,
+    entity_type TEXT,
+    entity_id TEXT,
+    details TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
 `);
 
 // Seed a default admin user if none exists
@@ -94,7 +105,7 @@ if (!adminExists) {
   const { v4: uuidv4 } = require('uuid');
   const hashedPassword = bcrypt.hashSync('admin123', 10);
   db.prepare('INSERT INTO users (id, name, email, password, role) VALUES (?, ?, ?, ?, ?)').run(
-    uuidv4(), 'Admin', 'admin@transparenterp.org', hashedPassword, 'admin'
+    uuidv4(), 'Admin', 'admin@chainfund.org', hashedPassword, 'admin'
   );
 }
 

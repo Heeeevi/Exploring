@@ -1,4 +1,4 @@
-/* ===== DESIGN SYSTEM: TransparentERP ===== */
+/* ===== DESIGN SYSTEM: ChainFund ===== */
 
 :root {
   /* Colors - Dark theme with trust-evoking blues and greens */
@@ -1085,4 +1085,13 @@ tbody tr:hover {
 .toast.error {
   background: var(--accent-red);
   color: white;
+}
+
+/* Spin animation for loaders */
+.spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
