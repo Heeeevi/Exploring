@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
 import { ChevronDown, ChevronRight, CheckCircle, Lightbulb, HelpCircle } from 'lucide-react';
-import { useI18n } from '../i18n';
+import { useI18n } from '../i18n.jsx';
 
 // We'll use the localized sections from the i18n provider
 

@@ -122,7 +122,7 @@ const translations = {
             },
             {
               title: 'Memahami Dashboard',
-              content: `Dashboard menampilkan ringkasan keuangan organisasi kamu:\n\n• Total Income — Semua pemasukan yang sudah dicatat\n• Total Expenses — Semua pengeluaran yang sudah dicatat\n• Net Balance — Selisih income - expense (sisa dana)\n• Donors — Jumlah donatur yang terdaftar\n• Chart — Grafik income vs expense 30 hari terakhir\n• Blockchain Status — Status integritas hash chain` 
+              content: `Dashboard menampilkan ringkasan keuangan organisasi kamu:\n\n• Total Income — Semua pemasukan yang sudah dicatat\n• Total Expenses — Semua pengeluaran yang sudah dicatat\n• Net Balance — Selisih income - expense (sisa dana)\n• Donors — Jumlah donatur yang terdaftar\n• Chart — Grafik income vs expense 30 hari terakhir\n• Blockchain Status — Status integritas hash chain`
             }
           ]
         },

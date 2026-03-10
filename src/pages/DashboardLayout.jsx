@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { LayoutDashboard, DollarSign, Users, FolderKanban, Globe, LogOut, Shield, BookOpen, Anchor, Activity } from 'lucide-react';
-import { useI18n } from '../i18n';
+import { useI18n } from '../i18n.jsx';
 
 export default function DashboardLayout() {
     const { user, logout } = useAuth();
