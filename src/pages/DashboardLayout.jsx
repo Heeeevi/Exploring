@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { LayoutDashboard, DollarSign, Users, FolderKanban, Globe, LogOut, Shield, BookOpen, Anchor, Activity } from 'lucide-react';
+import { useI18n } from '../i18n';
 
 export default function DashboardLayout() {
     const { user, logout } = useAuth();
@@ -12,34 +13,36 @@ export default function DashboardLayout() {
         navigate('/');
     };
 
+    const { t, locale, setLocale } = useI18n();
+
     return (
         <div className="dashboard-layout">
             <aside className="sidebar">
                 <div className="sidebar-logo">
                     <div className="logo-icon">🔗</div>
-                    ChainFund
+                    {t('siteName')}
                 </div>
                 <nav className="sidebar-nav">
                     <div className="sidebar-section-title">Main</div>
                     <NavLink to="/dashboard" end className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
                         <LayoutDashboard size={20} className="icon" />
-                        Dashboard
+                        {t('sidebar.dashboard')}
                     </NavLink>
                     <NavLink to="/dashboard/finance" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
                         <DollarSign size={20} className="icon" />
-                        Finance
+                        {t('sidebar.finance')}
                     </NavLink>
                     <NavLink to="/dashboard/donors" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
                         <Users size={20} className="icon" />
-                        Donors
+                        {t('sidebar.donors')}
                     </NavLink>
                     <NavLink to="/dashboard/programs" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
                         <FolderKanban size={20} className="icon" />
-                        Programs
+                        {t('sidebar.programs')}
                     </NavLink>
                     <NavLink to="/dashboard/guide" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
                         <BookOpen size={20} className="icon" />
-                        Panduan
+                        {t('sidebar.guide')}
                     </NavLink>
 
                     <div className="sidebar-section-title">Transparency</div>
@@ -70,9 +73,16 @@ export default function DashboardLayout() {
                             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{user?.role}</div>
                         </div>
                     </div>
+                    <div style={{ padding: '0 12px 12px', display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Language</label>
+                        <select value={locale} onChange={(e) => setLocale(e.target.value)} style={{ background: 'transparent', color: 'inherit', border: '1px solid var(--border-color)', borderRadius: 6, padding: '6px 8px' }}>
+                            <option value="en">English</option>
+                            <option value="id">Indonesia</option>
+                        </select>
+                    </div>
                     <button onClick={handleLogout} className="sidebar-link" style={{ width: '100%', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: 'var(--text-secondary)' }}>
                         <LogOut size={20} className="icon" />
-                        Sign Out
+                        {t('sidebar.signOut')}
                     </button>
                 </div>
             </aside>
