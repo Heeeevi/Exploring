@@ -41,25 +41,26 @@ function handleOptions() {
 }
 
 // Parse path segments from the event
-// With Netlify redirects, paths come as:
-//   /api/auth/login → /.netlify/functions/auth/login → rawPath="/login" or path="/.netlify/functions/auth/login"
+// With Netlify redirects (status 200), the event.path contains the ORIGINAL path:
+//   /api/auth/login  (not /.netlify/functions/auth/login)
+// With direct calls:
+//   /.netlify/functions/auth/login
 function parsePath(event) {
     const rawPath = event.rawPath || event.path || '';
     
-    // Try to extract from /.netlify/functions/<name>/<rest>
-    const match = rawPath.match(/\/\.netlify\/functions\/[^/]+(\/.*)?/);
-    if (match && match[1]) {
-        return match[1].split('/').filter(Boolean);
+    // Pattern 1: /.netlify/functions/<name>/<rest>
+    const netlifyMatch = rawPath.match(/\/\.netlify\/functions\/[^/]+(\/.*)?/);
+    if (netlifyMatch && netlifyMatch[1]) {
+        return netlifyMatch[1].split('/').filter(Boolean);
     }
     
-    // Fallback: everything after the function name
-    const functionName = rawPath.split('/').find((_, i, arr) => arr[i - 1] === 'functions') || '';
-    if (functionName) {
-        const afterFunction = rawPath.split(`/functions/${functionName}`)[1] || '';
-        return afterFunction.split('/').filter(Boolean);
+    // Pattern 2: /api/<name>/<rest> (from Netlify redirect with status 200)
+    const apiMatch = rawPath.match(/\/api\/[^/]+(\/.*)?/);
+    if (apiMatch && apiMatch[1]) {
+        return apiMatch[1].split('/').filter(Boolean);
     }
 
-    // Last resort: just split the path
+    // Pattern 3: just the path segments (e.g. /login)
     return rawPath.split('/').filter(Boolean);
 }
 
