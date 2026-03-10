@@ -2,8 +2,8 @@
  * ChainFund — Activity Log Function
  * Routes: GET /, GET /stats
  */
-const { supabase } = require('./lib/supabase.js');
-const { jsonResponse, verifyAuth, handleOptions, parsePath, parseQuery } = require('./lib/helpers.js');
+const { supabase } = require('./lib/supabase.cjs');
+const { jsonResponse, verifyAuth, handleOptions, parsePath, parseQuery } = require('./lib/helpers.cjs');
 
 exports.handler = async (event) => {
     if (event.httpMethod === 'OPTIONS') return handleOptions();

@@ -3,15 +3,15 @@
  * Routes: POST /anchor, GET /anchors, GET /verify/:sig, GET /wallet, GET /status
  */
 const crypto = require('crypto');
-const { supabase } = require('./lib/supabase.js');
-const { jsonResponse, verifyAuth, handleOptions, parsePath } = require('./lib/helpers.js');
+const { supabase } = require('./lib/supabase.cjs');
+const { jsonResponse, verifyAuth, handleOptions, parsePath } = require('./lib/helpers.cjs');
 
 // Lazy-load Solana anchor service
 let solanaAnchor = null;
 function getSolana() {
     if (!solanaAnchor) {
         try {
-            solanaAnchor = require('./lib/solana-anchor.js');
+            solanaAnchor = require('./lib/solana-anchor.cjs');
         } catch (err) {
             console.warn('⚠️  Solana module not available:', err.message);
             return null;

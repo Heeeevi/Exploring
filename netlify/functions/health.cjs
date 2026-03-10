@@ -1,7 +1,7 @@
 /**
  * ChainFund — Health Check
  */
-const { jsonResponse, handleOptions } = require('./lib/helpers.js');
+const { jsonResponse, handleOptions } = require('./lib/helpers.cjs');
 
 exports.handler = async (event) => {
     try {
@@ -10,7 +10,7 @@ exports.handler = async (event) => {
         // Test Supabase connection
         let dbStatus = 'unknown';
         try {
-            const { supabase } = require('./lib/supabase.js');
+            const { supabase } = require('./lib/supabase.cjs');
             const { count, error } = await supabase
                 .from('users')
                 .select('*', { count: 'exact', head: true });

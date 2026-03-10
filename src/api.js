@@ -12,7 +12,7 @@ async function request(path, options = {}) {
     try {
         res = await fetch(`${API_BASE}${path}`, { ...options, headers });
     } catch (err) {
-        throw new Error('Cannot connect to server. Run: node server/index.cjs');
+        throw new Error('Cannot connect to server. Check your network connection.');
     }
 
     if (res.status === 401) {
@@ -26,7 +26,7 @@ async function request(path, options = {}) {
     try {
         data = await res.json();
     } catch (err) {
-        throw new Error('Server returned invalid response. Is backend running on port 3001?');
+        throw new Error(`Server error (${res.status}). Please try again.`);
     }
 
     if (!res.ok) throw new Error(data.error || 'Request failed');

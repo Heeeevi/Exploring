@@ -3,9 +3,9 @@
  * Routes: GET /, GET /stats, GET /recent-chart, POST /, GET /:id, PUT /:id
  */
 const { v4: uuidv4 } = require('uuid');
-const { supabase } = require('./lib/supabase.js');
-const blockchain = require('./lib/blockchain.js');
-const { jsonResponse, verifyAuth, handleOptions, parsePath, parseQuery } = require('./lib/helpers.js');
+const { supabase } = require('./lib/supabase.cjs');
+const blockchain = require('./lib/blockchain.cjs');
+const { jsonResponse, verifyAuth, handleOptions, parsePath, parseQuery } = require('./lib/helpers.cjs');
 
 function formatAmount(n) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);

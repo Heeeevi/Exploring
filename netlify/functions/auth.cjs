@@ -5,8 +5,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-const { supabase } = require('./lib/supabase.js');
-const { JWT_SECRET, jsonResponse, verifyAuth, handleOptions, parsePath } = require('./lib/helpers.js');
+const { supabase } = require('./lib/supabase.cjs');
+const { JWT_SECRET, jsonResponse, verifyAuth, handleOptions, parsePath } = require('./lib/helpers.cjs');
 
 exports.handler = async (event) => {
     if (event.httpMethod === 'OPTIONS') return handleOptions();

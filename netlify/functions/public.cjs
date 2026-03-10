@@ -2,9 +2,9 @@
  * ChainFund — Public API Function (no auth required)
  * Routes: GET /stats, GET /ledger, GET /verify/chain, GET /verify/:txId, GET /programs, GET /export
  */
-const { supabase } = require('./lib/supabase.js');
-const blockchain = require('./lib/blockchain.js');
-const { jsonResponse, handleOptions, parsePath, parseQuery } = require('./lib/helpers.js');
+const { supabase } = require('./lib/supabase.cjs');
+const blockchain = require('./lib/blockchain.cjs');
+const { jsonResponse, handleOptions, parsePath, parseQuery } = require('./lib/helpers.cjs');
 
 exports.handler = async (event) => {
     if (event.httpMethod === 'OPTIONS') return handleOptions();

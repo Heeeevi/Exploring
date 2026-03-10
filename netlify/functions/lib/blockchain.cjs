@@ -2,7 +2,7 @@
  * ChainFund — Blockchain (SHA-256 Hash Chain) layer using Supabase
  */
 const crypto = require('crypto');
-const { supabase } = require('./supabase.js');
+const { supabase } = require('./supabase.cjs');
 
 const GENESIS_HASH = '0000000000000000000000000000000000000000000000000000000000000000';
 

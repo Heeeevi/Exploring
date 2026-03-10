@@ -8,9 +8,9 @@ exports.handler = async (event) => {
     try { require('jsonwebtoken'); results.jsonwebtoken = 'ok'; } catch (e) { results.jsonwebtoken = e.message; }
     try { require('uuid'); results.uuid = 'ok'; } catch (e) { results.uuid = e.message; }
     try { require('@supabase/supabase-js'); results.supabase = 'ok'; } catch (e) { results.supabase = e.message; }
-    try { require('./lib/helpers.js'); results.helpers = 'ok'; } catch (e) { results.helpers = e.message; }
-    try { require('./lib/supabase.js'); results.supabaseLib = 'ok'; } catch (e) { results.supabaseLib = e.message; }
-    try { require('./lib/blockchain.js'); results.blockchain = 'ok'; } catch (e) { results.blockchain = e.message; }
+    try { require('./lib/helpers.cjs'); results.helpers = 'ok'; } catch (e) { results.helpers = e.message; }
+    try { require('./lib/supabase.cjs'); results.supabaseLib = 'ok'; } catch (e) { results.supabaseLib = e.message; }
+    try { require('./lib/blockchain.cjs'); results.blockchain = 'ok'; } catch (e) { results.blockchain = e.message; }
 
     return {
         statusCode: 200,
