@@ -50,14 +50,14 @@ function parsePath(event) {
     
     // Pattern 1: /.netlify/functions/<name>/<rest>
     const netlifyMatch = rawPath.match(/\/\.netlify\/functions\/[^/]+(\/.*)?/);
-    if (netlifyMatch && netlifyMatch[1]) {
-        return netlifyMatch[1].split('/').filter(Boolean);
+    if (netlifyMatch) {
+        return netlifyMatch[1] ? netlifyMatch[1].split('/').filter(Boolean) : [];
     }
     
     // Pattern 2: /api/<name>/<rest> (from Netlify redirect with status 200)
     const apiMatch = rawPath.match(/\/api\/[^/]+(\/.*)?/);
-    if (apiMatch && apiMatch[1]) {
-        return apiMatch[1].split('/').filter(Boolean);
+    if (apiMatch) {
+        return apiMatch[1] ? apiMatch[1].split('/').filter(Boolean) : [];
     }
 
     // Pattern 3: just the path segments (e.g. /login)
