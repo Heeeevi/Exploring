@@ -2,7 +2,7 @@
  * ChainFund — Transactions Function
  * Routes: GET /, GET /stats, GET /recent-chart, POST /, GET /:id, PUT /:id
  */
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const { supabase } = require('./lib/supabase.cjs');
 const blockchain = require('./lib/blockchain.cjs');
 const { jsonResponse, verifyAuth, handleOptions, parsePath, parseQuery } = require('./lib/helpers.cjs');
@@ -138,7 +138,7 @@ exports.handler = async (event) => {
                 return jsonResponse(400, { error: 'type must be income or expense' });
             }
 
-            const id = uuidv4();
+            const id = crypto.randomUUID();
             const now = new Date().toISOString();
 
             await supabase.from('transactions').insert({

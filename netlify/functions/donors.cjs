@@ -2,7 +2,7 @@
  * ChainFund — Donors Function
  * Routes: GET /, POST /, GET /:id, PUT /:id, DELETE /:id
  */
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const { supabase } = require('./lib/supabase.cjs');
 const { jsonResponse, verifyAuth, handleOptions, parsePath } = require('./lib/helpers.cjs');
 
@@ -67,7 +67,7 @@ exports.handler = async (event) => {
             const { name, email, organization, country } = JSON.parse(event.body || '{}');
             if (!name) return jsonResponse(400, { error: 'Name is required' });
 
-            const id = uuidv4();
+            const id = crypto.randomUUID();
             await supabase.from('donors').insert({
                 id, name, email: email || null, organization: organization || null, country: country || null
             });

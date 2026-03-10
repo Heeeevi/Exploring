@@ -4,7 +4,7 @@
  */
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const { supabase } = require('./lib/supabase.cjs');
 const { JWT_SECRET, jsonResponse, verifyAuth, handleOptions, parsePath } = require('./lib/helpers.cjs');
 
@@ -70,7 +70,7 @@ exports.handler = async (event) => {
                 return jsonResponse(409, { error: 'Email already registered' });
             }
 
-            const id = uuidv4();
+            const id = crypto.randomUUID();
             const hashedPassword = bcrypt.hashSync(password, 10);
             await supabase.from('users').insert({
                 id, name, email, password: hashedPassword, role: role || 'staff'
