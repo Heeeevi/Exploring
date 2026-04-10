@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
+import { useTheme } from '../useTheme';
 import { Search, Shield, Download, ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight, ExternalLink, HelpCircle, Anchor } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 
 function formatUSD(n) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
@@ -14,6 +16,7 @@ export default function PublicLedger() {
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [solana, setSolana] = useState(null);
+    const { theme, toggleTheme } = useTheme();
 
     useEffect(() => {
         api.publicStats().then(setStats);
@@ -31,7 +34,7 @@ export default function PublicLedger() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `chainfund-export-${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = `fundnproof-export-${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -47,7 +50,7 @@ export default function PublicLedger() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `chainfund-export-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.download = `fundnproof-export-${new Date().toISOString().slice(0, 10)}.csv`;
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -65,11 +68,20 @@ export default function PublicLedger() {
         <div className="public-layout">
             <nav className="public-nav">
                 <div className="landing-logo">
-                    <div className="logo-icon">🔗</div>
-                    <span>ChainFund</span>
+                    <img src="/FNP Logo.png" alt="FundNProof logo" className="logo-icon" />
+                    <span>FundNProof</span>
                     <span className="badge badge-chain" style={{ marginLeft: 8 }}>Public Ledger</span>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="public-nav-actions">
+                    <button
+                        className="theme-toggle"
+                        onClick={toggleTheme}
+                        type="button"
+                        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                    >
+                        {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+                    </button>
                     <Link to="/public/how-it-works" className="btn btn-ghost btn-sm">
                         <HelpCircle size={14} /> Cara Kerja
                     </Link>
@@ -83,7 +95,7 @@ export default function PublicLedger() {
             <div className="public-body">
                 <div className="public-hero">
                     <h1>📊 Public Financial Ledger</h1>
-                    <p>Every transaction is cryptographically verified. Explore, search, and export — no account needed.</p>
+                    <p>Asked "Where did my money go?" Verify it here directly with cryptographic proof.</p>
                 </div>
 
                 {/* Chain Status */}
@@ -99,22 +111,19 @@ export default function PublicLedger() {
 
                 {/* Solana Proof Banner */}
                 {solana && solana.totalAnchors > 0 && (
-                    <div style={{
-                        display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderRadius: 12, marginBottom: 20,
-                        background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.15)',
-                    }}>
-                        <Anchor size={20} style={{ color: 'var(--accent-purple)', flexShrink: 0 }} />
-                        <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 600, fontSize: '0.88rem', marginBottom: 2 }}>
+                    <div className="public-banner public-banner-purple">
+                        <Anchor size={20} className="public-banner-icon" />
+                        <div className="public-banner-content">
+                            <div className="public-banner-title">
                                 On-Chain Proof: {solana.anchoredEntries}/{solana.totalLedgerEntries} entries anchored to Solana
                             </div>
-                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                            <div className="public-banner-subtitle">
                                 {solana.totalAnchors} Merkle root(s) permanently recorded on Solana blockchain
                             </div>
                         </div>
                         {solana.lastAnchor?.explorerUrl && (
                             <a href={solana.lastAnchor.explorerUrl} target="_blank" rel="noopener noreferrer"
-                                className="btn btn-sm" style={{ background: 'rgba(168,85,247,0.15)', color: 'var(--accent-purple)', border: '1px solid rgba(168,85,247,0.2)' }}>
+                                className="btn btn-sm public-banner-action">
                                 <ExternalLink size={12} /> Verify on Solana
                             </a>
                         )}
@@ -145,12 +154,12 @@ export default function PublicLedger() {
                 )}
 
                 {/* Search & Export */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+                <div className="public-toolbar">
                     <div className="search-bar">
                         <Search size={16} style={{ color: 'var(--text-muted)' }} />
                         <input placeholder="Search transactions, hashes, categories..." onChange={e => handleSearch(e.target.value)} />
                     </div>
-                    <div style={{ display: 'flex', gap: 8 }}>
+                    <div className="public-toolbar-actions">
                         <button className="btn btn-secondary btn-sm" onClick={handleCSVExport}>
                             <Download size={14} /> Export CSV
                         </button>

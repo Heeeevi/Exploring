@@ -1,11 +1,11 @@
 /**
- * ChainFund — Auth Function (login, register, me)
+ * FundNProof — Auth Function (login, register, me)
  * Routes: POST /login, POST /register, GET /me
  */
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { supabase } = require('./lib/supabase.cjs');
+const { supabase, hasSupabaseConfig } = require('./lib/supabase.cjs');
 const { JWT_SECRET, jsonResponse, verifyAuth, handleOptions, parsePath } = require('./lib/helpers.cjs');
 
 exports.handler = async (event) => {
@@ -13,6 +13,12 @@ exports.handler = async (event) => {
 
     const segments = parsePath(event);
     const method = event.httpMethod;
+
+    if (!hasSupabaseConfig || !supabase) {
+        return jsonResponse(503, {
+            error: 'Auth service is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.'
+        });
+    }
 
     try {
         // POST /auth/login
@@ -22,13 +28,18 @@ exports.handler = async (event) => {
                 return jsonResponse(400, { error: 'Email and password required' });
             }
 
-            const { data: user } = await supabase
+            const { data: user, error: userError } = await supabase
                 .from('users')
-                .select('*')
+                .select('id, name, email, role, password')
                 .eq('email', email)
-                .single();
+                .maybeSingle();
 
-            if (!user || !bcrypt.compareSync(password, user.password)) {
+            if (userError) {
+                console.error('Auth login query error:', userError.message);
+                return jsonResponse(500, { error: 'Failed to validate credentials' });
+            }
+
+            if (!user || !user.password || !bcrypt.compareSync(password, user.password)) {
                 return jsonResponse(401, { error: 'Invalid credentials' });
             }
 
@@ -51,11 +62,16 @@ exports.handler = async (event) => {
                 return jsonResponse(400, { error: 'Name, email, and password required' });
             }
 
-            const { data: existing } = await supabase
+            const { data: existing, error: existingError } = await supabase
                 .from('users')
                 .select('id')
                 .eq('email', email)
-                .single();
+                .maybeSingle();
+
+            if (existingError) {
+                console.error('Auth register lookup error:', existingError.message);
+                return jsonResponse(500, { error: 'Failed to validate email' });
+            }
 
             if (existing) {
                 return jsonResponse(409, { error: 'Email already registered' });
@@ -63,9 +79,14 @@ exports.handler = async (event) => {
 
             const id = crypto.randomUUID();
             const hashedPassword = bcrypt.hashSync(password, 10);
-            await supabase.from('users').insert({
+            const { error: insertError } = await supabase.from('users').insert({
                 id, name, email, password: hashedPassword, role: role || 'staff'
             });
+
+            if (insertError) {
+                console.error('Auth register insert error:', insertError.message);
+                return jsonResponse(500, { error: 'Failed to create account' });
+            }
 
             const token = jwt.sign(
                 { id, name, email, role: role || 'staff' },
@@ -84,11 +105,16 @@ exports.handler = async (event) => {
             const user = verifyAuth(event);
             if (!user) return jsonResponse(401, { error: 'No token provided' });
 
-            const { data } = await supabase
+            const { data, error: meError } = await supabase
                 .from('users')
                 .select('id, name, email, role, created_at')
                 .eq('id', user.id)
-                .single();
+                .maybeSingle();
+
+            if (meError) {
+                console.error('Auth me query error:', meError.message);
+                return jsonResponse(500, { error: 'Failed to load user profile' });
+            }
 
             if (!data) return jsonResponse(404, { error: 'User not found' });
             return jsonResponse(200, data);

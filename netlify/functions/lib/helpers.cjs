@@ -1,9 +1,9 @@
 /**
- * ChainFund — Shared auth helpers for Netlify Functions
+ * FundNProof — Shared auth helpers for Netlify Functions
  */
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'chainfund-secret-key-change-in-prod';
+const JWT_SECRET = process.env.JWT_SECRET || 'fundnproof-secret-key-change-in-prod';
 
 // CORS headers
 const corsHeaders = {

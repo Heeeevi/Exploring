@@ -1,5 +1,5 @@
 /**
- * ChainFund — Public API Function (no auth required)
+ * FundNProof — Public API Function (no auth required)
  * Routes: GET /stats, GET /ledger, GET /verify/chain, GET /verify/:txId, GET /programs, GET /export
  */
 const { supabase } = require('./lib/supabase.cjs');

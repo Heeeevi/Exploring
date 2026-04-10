@@ -1,5 +1,5 @@
 # ============================================
-# ChainFund — Netlify Deployment Configuration
+# FundNProof — Netlify Deployment Configuration
 # ============================================
 # Frontend: Vite/React SPA → Netlify CDN
 # Backend:  Netlify Functions (serverless) → Supabase PostgreSQL

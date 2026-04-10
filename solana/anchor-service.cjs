@@ -1,5 +1,5 @@
 /**
- * ChainFund — Solana Anchor Service
+ * FundNProof — Solana Anchor Service
  * 
  * Anchors batches of transaction hashes (Merkle Root) to Solana blockchain.
  * This provides an immutable, publicly verifiable proof on a global blockchain
@@ -122,7 +122,7 @@ class SolanaAnchor {
      * 
      * The memo contains a JSON string:
      * {
-     *   "app": "ChainFund",
+     *   "app": "FundNProof",
      *   "version": "1.0",
      *   "merkle_root": "abc123...",
      *   "entries": 25,
@@ -138,7 +138,7 @@ class SolanaAnchor {
         }
 
         const memoData = JSON.stringify({
-            app: 'ChainFund',
+            app: 'FundNProof',
             v: '1.0',
             merkle_root: merkleRoot,
             entries: entryCount,
@@ -203,7 +203,7 @@ class SolanaAnchor {
 
             // Extract memo data from log messages (check both names for backward compat)
             const logs = tx.meta?.logMessages || [];
-            const memoLog = logs.find(l => l.includes('ChainFund') || l.includes('TransparentERP'));
+            const memoLog = logs.find(l => l.includes('FundNProof') || l.includes('TransparentERP'));
             
             let memoData = null;
             if (memoLog) {

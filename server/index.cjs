@@ -35,7 +35,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`\n🔗 ChainFund Backend running on http://localhost:${PORT}`);
+    console.log(`\n🔗 FundNProof Backend running on http://localhost:${PORT}`);
     console.log(`📊 API: http://localhost:${PORT}/api`);
     console.log(`🌐 Public Ledger API: http://localhost:${PORT}/api/public`);
     console.log(`⛓️  Solana Anchor API: http://localhost:${PORT}/api/solana\n`);

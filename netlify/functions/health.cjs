@@ -1,5 +1,5 @@
 /**
- * ChainFund — Health Check
+ * FundNProof — Health Check
  */
 const { jsonResponse, handleOptions } = require('./lib/helpers.cjs');
 

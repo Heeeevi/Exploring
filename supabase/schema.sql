@@ -1,5 +1,5 @@
 -- ============================================
--- ChainFund — Supabase Database Schema
+-- FundNProof — Supabase Database Schema
 -- ============================================
 -- Run this SQL in the Supabase SQL Editor to set up all tables.
 -- Dashboard → SQL Editor → New Query → Paste & Run
@@ -250,7 +250,7 @@ INSERT INTO users (id, name, email, password, role)
 VALUES (
     'admin-' || gen_random_uuid()::TEXT,
     'Admin',
-    'admin@chainfund.org',
+    'admin@fundnproof.org',
     '$2b$10$U03RRZhNGq0.aJ.wS9d05OLs2VVdNTjNwZ/HDGneogiqctnKRQqsy',
     'admin'
 ) ON CONFLICT (email) DO NOTHING;

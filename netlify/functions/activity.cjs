@@ -1,5 +1,5 @@
 /**
- * ChainFund — Activity Log Function
+ * FundNProof — Activity Log Function
  * Routes: GET /, GET /stats
  */
 const { supabase } = require('./lib/supabase.cjs');

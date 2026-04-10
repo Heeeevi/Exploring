@@ -1,5 +1,5 @@
 /**
- * ChainFund — Solana Anchor Service (Netlify Functions version)
+ * FundNProof — Solana Anchor Service (Netlify Functions version)
  * 
  * Adapted for serverless: uses SOLANA_KEYPAIR env var (JSON array) instead of file.
  */
@@ -74,7 +74,7 @@ class SolanaAnchor {
         if (!this.keypair) throw new Error('Solana keypair not initialized. Set SOLANA_KEYPAIR env var.');
 
         const memoData = JSON.stringify({
-            app: 'ChainFund',
+            app: 'FundNProof',
             v: '1.0',
             merkle_root: merkleRoot,
             entries: entryCount,
@@ -124,7 +124,7 @@ class SolanaAnchor {
             if (!tx) return { verified: false, message: 'Transaction not found on Solana' };
 
             const logs = tx.meta?.logMessages || [];
-            const memoLog = logs.find(l => l.includes('ChainFund') || l.includes('TransparentERP'));
+            const memoLog = logs.find(l => l.includes('FundNProof') || l.includes('TransparentERP'));
 
             let memoData = null;
             if (memoLog) {

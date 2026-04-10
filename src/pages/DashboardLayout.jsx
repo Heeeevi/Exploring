@@ -1,8 +1,9 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { LayoutDashboard, DollarSign, Users, FolderKanban, Globe, LogOut, Shield, BookOpen, Anchor, Activity } from 'lucide-react';
+import { LayoutDashboard, DollarSign, Users, FolderKanban, Globe, LogOut, Shield, BookOpen, Anchor, Activity, Moon, Sun } from 'lucide-react';
 import { useI18n } from '../i18n.jsx';
+import { useTheme } from '../useTheme.js';
 
 export default function DashboardLayout() {
     const { user, logout } = useAuth();
@@ -14,12 +15,13 @@ export default function DashboardLayout() {
     };
 
     const { t, locale, setLocale } = useI18n();
+    const { theme, toggleTheme } = useTheme();
 
     return (
         <div className="dashboard-layout">
             <aside className="sidebar">
                 <div className="sidebar-logo">
-                    <div className="logo-icon">🔗</div>
+                    <img src="/FNP Logo.png" alt="FundNProof logo" className="logo-icon" />
                     {t('siteName')}
                 </div>
                 <nav className="sidebar-nav">
@@ -79,6 +81,9 @@ export default function DashboardLayout() {
                             <option value="en">English</option>
                             <option value="id">Indonesia</option>
                         </select>
+                        <button onClick={toggleTheme} className="theme-toggle" style={{ marginLeft: 'auto' }}>
+                            {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+                        </button>
                     </div>
                     <button onClick={handleLogout} className="sidebar-link" style={{ width: '100%', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: 'var(--text-secondary)' }}>
                         <LogOut size={20} className="icon" />

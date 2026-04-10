@@ -1,5 +1,5 @@
 /**
- * Seed script - adds demo data for ChainFund
+ * Seed script - adds demo data for FundNProof
  * Run: node server/seed-demo.cjs
  */
 const db = require('./db.cjs');

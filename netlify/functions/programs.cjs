@@ -1,5 +1,5 @@
 /**
- * ChainFund — Programs Function
+ * FundNProof — Programs Function
  * Routes: GET /, POST /, GET /:id, PUT /:id, DELETE /:id
  */
 const crypto = require('crypto');

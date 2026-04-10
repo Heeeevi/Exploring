@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useMemo } from 'react';
 
 const translations = {
   en: {
-    siteName: 'ChainFund',
+    siteName: 'FundNProof',
     sidebar: {
       main: 'Main',
       dashboard: 'Dashboard',
@@ -19,7 +19,7 @@ const translations = {
     },
     guide: {
       title: '📖 User Guide',
-      subtitle: 'How to use ChainFund from A to Z',
+      subtitle: 'How to use FundNProof from A to Z',
       expandAll: 'Expand All',
       collapseAll: 'Collapse All',
       quickTip: 'Quick Tip',
@@ -30,11 +30,11 @@ const translations = {
           id: 'getting-started',
           color: '#3b82f6',
           icon: '🚀',
-          title: 'Getting Started with ChainFund',
+          title: 'Getting Started with FundNProof',
           steps: [
             {
               title: 'Login to the Dashboard',
-              content: `Open the login page and enter the email and password provided by the admin. After successful login you will be redirected to the main Dashboard.\n\nDefault account: admin@chainfund.org / admin123\n\nIf you don't have an account, click Register to create one. New accounts get the 'staff' role.`
+              content: `Open the login page and enter the email and password provided by the admin. After successful login you will be redirected to the main Dashboard.\n\nDefault account: admin@fundnproof.org / admin123\n\nIf you don't have an account, click Register to create one. New accounts get the 'staff' role.`
             },
             {
               title: 'Understanding the Dashboard',
@@ -86,7 +86,7 @@ const translations = {
     }
   },
   id: {
-    siteName: 'ChainFund',
+    siteName: 'FundNProof',
     sidebar: {
       main: 'Main',
       dashboard: 'Dashboard',
@@ -103,7 +103,7 @@ const translations = {
     },
     guide: {
       title: '📖 Panduan Penggunaan',
-      subtitle: 'Cara menggunakan ChainFund dari A sampai Z',
+      subtitle: 'Cara menggunakan FundNProof dari A sampai Z',
       expandAll: 'Buka Semua',
       collapseAll: 'Tutup Semua',
       quickTip: 'Quick Tip',
@@ -114,11 +114,11 @@ const translations = {
           id: 'getting-started',
           color: '#3b82f6',
           icon: '🚀',
-          title: 'Mulai Menggunakan ChainFund',
+          title: 'Mulai Menggunakan FundNProof',
           steps: [
             {
               title: 'Login ke Dashboard',
-              content: `Buka halaman login dan masukkan email serta password yang sudah diberikan oleh admin. Setelah berhasil login, kamu akan langsung diarahkan ke Dashboard utama.\n\nAkun default: admin@chainfund.org / admin123\n\nKalau belum punya akun, klik "Register" untuk bikin akun baru. Akun baru otomatis mendapat role "staff".`
+              content: `Buka halaman login dan masukkan email serta password yang sudah diberikan oleh admin. Setelah berhasil login, kamu akan langsung diarahkan ke Dashboard utama.\n\nAkun default: admin@fundnproof.org / admin123\n\nKalau belum punya akun, klik "Register" untuk bikin akun baru. Akun baru otomatis mendapat role "staff".`
             },
             {
               title: 'Memahami Dashboard',
@@ -182,7 +182,7 @@ const translations = {
           id: 'blockchain',
           color: '#ef4444',
           icon: '🔐',
-          title: 'Cara Kerja Blockchain di ChainFund',
+          title: 'Cara Kerja Blockchain di FundNProof',
           steps: [
             {
               title: 'Alur Data',

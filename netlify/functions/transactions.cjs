@@ -1,5 +1,5 @@
 /**
- * ChainFund — Transactions Function
+ * FundNProof — Transactions Function
  * Routes: GET /, GET /stats, GET /recent-chart, POST /, GET /:id, PUT /:id
  */
 const crypto = require('crypto');

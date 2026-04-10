@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { Shield, Search, CheckCircle, XCircle, Link as LinkIcon, ArrowLeft, ExternalLink, Anchor } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
+import { useTheme } from '../useTheme';
 
 // Detect if input looks like a Solana signature (base58, 43+ chars, no dashes like UUIDs)
 function isSolanaSignature(str) {
@@ -20,6 +22,7 @@ export default function Verify() {
     const [anchorStatus, setAnchorStatus] = useState(null);
     const [loading, setLoading] = useState(false);
     const [chainLoading, setChainLoading] = useState(false);
+    const { theme, toggleTheme } = useTheme();
 
     useEffect(() => {
         if (urlTxId) {
@@ -68,11 +71,20 @@ export default function Verify() {
         <div className="public-layout">
             <nav className="public-nav">
                 <div className="landing-logo">
-                    <div className="logo-icon">🔗</div>
-                    <span>ChainFund</span>
+                    <img src="/FNP Logo.png" alt="FundNProof logo" className="logo-icon" />
+                    <span>FundNProof</span>
                     <span className="badge badge-chain" style={{ marginLeft: 8 }}>Verification</span>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="public-nav-actions">
+                    <button
+                        className="theme-toggle"
+                        onClick={toggleTheme}
+                        type="button"
+                        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                    >
+                        {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+                    </button>
                     <Link to="/public" className="btn btn-secondary btn-sm">
                         <ArrowLeft size={14} /> Back to Ledger
                     </Link>

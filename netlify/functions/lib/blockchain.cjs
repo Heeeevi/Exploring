@@ -1,5 +1,5 @@
 /**
- * ChainFund — Blockchain (SHA-256 Hash Chain) layer using Supabase
+ * FundNProof — Blockchain (SHA-256 Hash Chain) layer using Supabase
  */
 const crypto = require('crypto');
 const { supabase } = require('./supabase.cjs');

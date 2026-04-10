@@ -1,5 +1,5 @@
 /**
- * ChainFund — Solana Anchor Function
+ * FundNProof — Solana Anchor Function
  * Routes: POST /anchor, GET /anchors, GET /verify/:sig, GET /wallet, GET /status
  */
 const crypto = require('crypto');

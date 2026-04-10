@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
 import Landing from './pages/Landing';
+import About from './pages/About';
 import Login from './pages/Login';
 import DashboardLayout from './pages/DashboardLayout';
 import Dashboard from './pages/Dashboard';
@@ -27,6 +28,7 @@ function App() {
             <BrowserRouter>
                 <Routes>
                     <Route path="/" element={<Landing />} />
+                    <Route path="/about" element={<About />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/dashboard" element={
                         <ProtectedRoute>

@@ -99,13 +99,23 @@ db.exec(`
   );
 `);
 
-// Seed a default admin user if none exists
+// Migrate legacy default admin email and ensure FundNProof default admin exists.
+const LEGACY_ADMIN_EMAIL = 'admin@transparenterp.org';
+const DEFAULT_ADMIN_EMAIL = 'admin@fundnproof.org';
+
+const defaultAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get(DEFAULT_ADMIN_EMAIL);
+const legacyAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get(LEGACY_ADMIN_EMAIL);
+
+if (!defaultAdmin && legacyAdmin) {
+  db.prepare('UPDATE users SET email = ? WHERE id = ?').run(DEFAULT_ADMIN_EMAIL, legacyAdmin.id);
+}
+
 const adminExists = db.prepare('SELECT id FROM users WHERE role = ?').get('admin');
 if (!adminExists) {
   const { v4: uuidv4 } = require('uuid');
   const hashedPassword = bcrypt.hashSync('admin123', 10);
   db.prepare('INSERT INTO users (id, name, email, password, role) VALUES (?, ?, ?, ?, ?)').run(
-    uuidv4(), 'Admin', 'admin@chainfund.org', hashedPassword, 'admin'
+    uuidv4(), 'Admin', DEFAULT_ADMIN_EMAIL, hashedPassword, 'admin'
   );
 }
 

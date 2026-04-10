@@ -1,12 +1,13 @@
 {
-  "name": "chainfund",
+  "name": "fundnproof",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"npm run server\" \"npm run dev:client\"",
+    "dev:client": "vite",
     "server": "node server/index.cjs",
-    "start": "concurrently \"npm run server\" \"npm run dev\"",
+    "start": "npm run dev",
     "seed": "node server/seed-demo.cjs",
     "build": "vite build",
     "preview": "vite preview"

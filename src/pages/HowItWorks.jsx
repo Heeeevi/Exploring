@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
+import { useTheme } from '../useTheme';
 import {
     Shield, ArrowLeft, Eye, LinkIcon, DollarSign, Users, Globe,
     CheckCircle, ArrowRight, Lock, Search, Download, Database, Cpu, Zap
 } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 
 export default function HowItWorks() {
     const [stats, setStats] = useState(null);
+    const { theme, toggleTheme } = useTheme();
 
     useEffect(() => {
         api.publicStats().then(setStats).catch(() => {});
@@ -17,11 +20,20 @@ export default function HowItWorks() {
         <div className="public-layout">
             <nav className="public-nav">
                 <div className="landing-logo">
-                    <div className="logo-icon">🔗</div>
-                    <span>ChainFund</span>
+                    <img src="/FNP Logo.png" alt="FundNProof logo" className="logo-icon" />
+                    <span>FundNProof</span>
                     <span className="badge badge-chain" style={{ marginLeft: 8 }}>How It Works</span>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="public-nav-actions">
+                    <button
+                        className="theme-toggle"
+                        onClick={toggleTheme}
+                        type="button"
+                        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                    >
+                        {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+                    </button>
                     <Link to="/public" className="btn btn-secondary btn-sm">
                         <ArrowLeft size={14} /> Public Ledger
                     </Link>
@@ -32,7 +44,7 @@ export default function HowItWorks() {
                 {/* Hero */}
                 <div style={{ textAlign: 'center', padding: '48px 0 40px' }}>
                     <h1 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: 12, lineHeight: 1.2 }}>
-                        Bagaimana ChainFund<br />Menjamin Transparansi?
+                        Bagaimana FundNProof<br />Menjamin Transparansi?
                     </h1>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: 600, margin: '0 auto', lineHeight: 1.6 }}>
                         Panduan sederhana tentang cara kerja sistem transparansi keuangan berbasis blockchain untuk organisasi nirlaba.
@@ -153,7 +165,7 @@ export default function HowItWorks() {
                         },
                         {
                             q: 'Apakah saya perlu paham blockchain?',
-                            a: 'Tidak sama sekali! ChainFund dirancang agar bisa digunakan seperti software akuntansi biasa. Semua proses blockchain berjalan otomatis di belakang layar. Kamu cukup input data seperti biasa.'
+                            a: 'Tidak sama sekali! FundNProof dirancang agar bisa digunakan seperti software akuntansi biasa. Semua proses blockchain berjalan otomatis di belakang layar. Kamu cukup input data seperti biasa.'
                         },
                         {
                             q: 'Siapa yang bisa melihat Public Ledger?',
@@ -161,11 +173,11 @@ export default function HowItWorks() {
                         },
                         {
                             q: 'Apa perbedaannya dengan laporan keuangan biasa?',
-                            a: 'Laporan keuangan biasa bisa diedit atau dipalsukan. Di ChainFund, setiap transaksi dibuktikan dengan hash kriptografis yang saling terhubung. Mengubah 1 angka saja akan merusak seluruh chain — dan semua orang akan tahu.'
+                            a: 'Laporan keuangan biasa bisa diedit atau dipalsukan. Di FundNProof, setiap transaksi dibuktikan dengan hash kriptografis yang saling terhubung. Mengubah 1 angka saja akan merusak seluruh chain — dan semua orang akan tahu.'
                         },
                         {
                             q: 'Bagaimana dengan Solana blockchain?',
-                            a: 'Selain hash-chain internal, ChainFund secara periodik mengirim Merkle Root (ringkasan kriptografis dari batch transaksi) ke Solana blockchain. Ini memberikan bukti tambahan yang disimpan di jaringan blockchain publik dan global — tidak bisa dihapus oleh siapapun.'
+                            a: 'Selain hash-chain internal, FundNProof secara periodik mengirim Merkle Root (ringkasan kriptografis dari batch transaksi) ke Solana blockchain. Ini memberikan bukti tambahan yang disimpan di jaringan blockchain publik dan global — tidak bisa dihapus oleh siapapun.'
                         },
                     ].map((item, i) => (
                         <div key={i} style={{
