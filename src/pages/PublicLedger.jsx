@@ -94,7 +94,7 @@ export default function PublicLedger() {
 
             <div className="public-body">
                 <div className="public-hero">
-                    <h1>📊 Public Financial Ledger</h1>
+                    <h1>Public Financial Ledger</h1>
                     <p>Asked "Where did my money go?" Verify it here directly with cryptographic proof.</p>
                 </div>
 
@@ -103,7 +103,7 @@ export default function PublicLedger() {
                     <div className={`chain-status ${stats.chainIntegrity.valid ? 'valid' : 'invalid'}`}>
                         <span className="status-dot"></span>
                         <span>
-                            Chain Integrity: {stats.chainIntegrity.valid ? '✓ Verified' : '✗ BROKEN'} — {stats.chainIntegrity.totalEntries} entries,
+                            Chain Integrity: {stats.chainIntegrity.valid ? 'Verified' : 'Broken'} — {stats.chainIntegrity.totalEntries} entries,
                             {stats.chainIntegrity.valid ? ' all hashes intact' : ` broken at entry ${stats.chainIntegrity.brokenAt}`}
                         </span>
                     </div>
@@ -192,7 +192,7 @@ export default function PublicLedger() {
                                 ) : ledger.entries.length === 0 ? (
                                     <tr><td colSpan={9}>
                                         <div className="empty-state">
-                                            <div className="icon">📒</div>
+                                            <div className="icon">Ledger</div>
                                             <h3>No entries found</h3>
                                             <p>The ledger is empty or no results match your search.</p>
                                         </div>

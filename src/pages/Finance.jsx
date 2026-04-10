@@ -145,7 +145,7 @@ export default function Finance() {
                                 ) : filtered.length === 0 ? (
                                     <tr><td colSpan={9}>
                                         <div className="empty-state">
-                                            <div className="icon">💰</div>
+                                            <div className="icon">Transactions</div>
                                             <h3>No transactions found</h3>
                                             <p>{searchTerm ? 'Try a different search term.' : 'Click "New Transaction" to record your first income or expense.'}</p>
                                         </div>

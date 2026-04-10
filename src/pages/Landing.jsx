@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom';
 import { ArrowDown, ArrowUpRight, CircleDot, Sparkles } from 'lucide-react';
 
 const TOKENS = [
-    { id: 'cashflow', label: 'DONATION FLOW', kind: 'pill', x: 12, y: 54, rotate: -1, depth: 1.1 },
-    { id: 'yield', label: 'HASH PROOF', kind: 'pill', x: 32, y: 55, rotate: 1, depth: 1.3 },
-    { id: 'borefi', label: 'MERKLE ROOT', kind: 'pill-tilt', x: 63, y: 52, rotate: -58, depth: 1.8 },
-    { id: 'sme', label: 'PUBLIC LEDGER', kind: 'pill', x: 84, y: 61, rotate: 0, depth: 1.2 },
-    { id: 'asterisk', label: '*', kind: 'disc', x: 74, y: 62, rotate: 0, depth: 2.1 },
-    { id: 'down', label: '↓', kind: 'disc', x: 92, y: 54, rotate: 0, depth: 1.9 },
-    { id: 'dot-a', label: '', kind: 'dot', x: 93, y: 18, rotate: 0, depth: 1.1 },
-    { id: 'dot-b', label: '', kind: 'dot-half', x: 98, y: 7, rotate: 0, depth: 0.9 }
+    { id: 'cashflow', label: 'DONATION FLOW', kind: 'pill', x: 14, y: 32, rotate: 0, depth: 1.1 },
+    { id: 'yield', label: 'HASH PROOF', kind: 'pill', x: 35, y: 32, rotate: 0, depth: 1.3 },
+    { id: 'borefi', label: 'MERKLE ROOT', kind: 'pill', x: 56, y: 32, rotate: 0, depth: 1.5 },
+    { id: 'sme', label: 'PUBLIC LEDGER', kind: 'pill', x: 77, y: 32, rotate: 0, depth: 1.2 },
+    { id: 'asterisk', label: '*', kind: 'disc', x: 86, y: 32, rotate: 0, depth: 2.0 },
+    { id: 'down', label: '↓', kind: 'disc', x: 94, y: 32, rotate: 0, depth: 1.8 },
+    { id: 'dot-a', label: '', kind: 'dot', x: 93, y: 15, rotate: 0, depth: 1.1 },
+    { id: 'dot-b', label: '', kind: 'dot-half', x: 98, y: 8, rotate: 0, depth: 0.9 }
 ];
 
 export default function Landing() {
@@ -18,10 +18,12 @@ export default function Landing() {
     const titleRef = useRef(null);
     const descriptionRef = useRef(null);
     const ctaRef = useRef(null);
+    const [tokens, setTokens] = useState(() => TOKENS);
     const [arenaSize, setArenaSize] = useState({ width: 0, height: 0 });
     const [pointer, setPointer] = useState({ x: 0, y: 0, inside: false });
     const [protectedZones, setProtectedZones] = useState([]);
     const [titleTop, setTitleTop] = useState(null);
+    const [draggingTokenId, setDraggingTokenId] = useState(null);
 
     useEffect(() => {
         const update = () => {
@@ -59,6 +61,7 @@ export default function Landing() {
     }, []);
 
     const handleMove = (event) => {
+        if (draggingTokenId) return;
         const rect = event.currentTarget.getBoundingClientRect();
         setPointer({
             x: event.clientX - rect.left,
@@ -67,11 +70,80 @@ export default function Landing() {
         });
     };
 
+    const handleTokenPointerDown = (event, tokenId) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const rect = arenaRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        setPointer({
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top,
+            inside: true
+        });
+        setDraggingTokenId(tokenId);
+    };
+
+    useEffect(() => {
+        if (!draggingTokenId) return;
+
+        const handleWindowMove = (event) => {
+            const rect = arenaRef.current?.getBoundingClientRect();
+            if (!rect) return;
+
+            const rawX = event.clientX - rect.left;
+            const rawY = event.clientY - rect.top;
+            const upperBound = titleTop ? Math.max(86, titleTop - 72) : rect.height * 0.42;
+            const margin = 24;
+
+            const clampX = Math.min(rect.width - margin, Math.max(margin, rawX));
+            const clampY = Math.min(upperBound, Math.max(margin, rawY));
+
+            setPointer({ x: clampX, y: clampY, inside: true });
+
+            setTokens((prev) => prev.map((token) => {
+                if (token.id !== draggingTokenId) return token;
+
+                const nextX = (clampX / rect.width) * 100;
+                const nextY = (clampY / rect.height) * 100;
+                const rotationDelta = ((clampX / rect.width) - 0.5) * 18 + ((clampY / rect.height) - 0.5) * 10;
+
+                return {
+                    ...token,
+                    x: nextX,
+                    y: nextY,
+                    rotate: token.rotate + rotationDelta * 0.02
+                };
+            }));
+        };
+
+        const handleWindowUp = () => setDraggingTokenId(null);
+
+        window.addEventListener('pointermove', handleWindowMove);
+        window.addEventListener('pointerup', handleWindowUp);
+        window.addEventListener('pointercancel', handleWindowUp);
+
+        return () => {
+            window.removeEventListener('pointermove', handleWindowMove);
+            window.removeEventListener('pointerup', handleWindowUp);
+            window.removeEventListener('pointercancel', handleWindowUp);
+        };
+    }, [draggingTokenId, titleTop]);
+
     const tokenStyles = useMemo(() => {
-        return TOKENS.map((token) => {
+        return tokens.map((token) => {
             if (!arenaSize.width || !arenaSize.height) {
                 return {
                     transform: `translate(-50%, -50%) rotate(${token.rotate}deg)`
+                };
+            }
+
+            if (token.id === draggingTokenId) {
+                return {
+                    transform: `translate(-50%, -50%) rotate(${token.rotate}deg)`,
+                    zIndex: 12,
+                    cursor: 'grabbing'
                 };
             }
 
@@ -128,10 +200,11 @@ export default function Landing() {
             const finalRotation = token.rotate + rotationDelta;
 
             return {
-                transform: `translate(-50%, -50%) translate(${finalTx}px, ${finalTy}px) rotate(${finalRotation}deg)`
+                transform: `translate(-50%, -50%) translate(${finalTx}px, ${finalTy}px) rotate(${finalRotation}deg)`,
+                cursor: 'grab'
             };
         });
-    }, [arenaSize.height, arenaSize.width, pointer.inside, pointer.x, pointer.y, protectedZones, titleTop]);
+    }, [arenaSize.height, arenaSize.width, pointer.inside, pointer.x, pointer.y, protectedZones, titleTop, tokens, draggingTokenId]);
 
     return (
         <div className="landing-page landing-v2">
@@ -161,8 +234,13 @@ export default function Landing() {
                 />
 
                 <div className="landing-v2-orbit">
-                    {TOKENS.map((token, index) => (
-                        <div key={token.id} className="physics-body" style={{ left: `${token.x}%`, top: `${token.y}%`, ...tokenStyles[index] }}>
+                    {tokens.map((token, index) => (
+                        <div
+                            key={token.id}
+                            className={`physics-body ${draggingTokenId === token.id ? 'is-dragging' : ''}`}
+                            style={{ left: `${token.x}%`, top: `${token.y}%`, ...tokenStyles[index] }}
+                            onPointerDown={(event) => handleTokenPointerDown(event, token.id)}
+                        >
                             <div className={`v2-token ${token.kind}`}>
                                 {token.id === 'dot-a' && <CircleDot size={14} />}
                                 {token.id === 'dot-b' && <span className="v2-half-dot" />}

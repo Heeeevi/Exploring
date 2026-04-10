@@ -99,7 +99,7 @@ export default function Programs() {
                 ) : programs.length === 0 ? (
                     <div className="card">
                         <div className="empty-state">
-                            <div className="icon">📋</div>
+                            <div className="icon">Programs</div>
                             <h3>No programs yet</h3>
                             <p>Create your first program to start tracking fund allocation.</p>
                         </div>

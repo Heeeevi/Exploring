@@ -40,7 +40,7 @@ export default function SolanaAnchor() {
         try {
             const result = await api.solanaAnchor();
             if (result.success) {
-                setMessage({ type: 'success', text: `✅ Anchored to Solana! Tx: ${result.signature?.slice(0, 24)}...` });
+                setMessage({ type: 'success', text: `Anchored to Solana. Tx: ${result.signature?.slice(0, 24)}...` });
             } else if (result.message) {
                 setMessage({ type: 'info', text: result.message });
             }
@@ -79,17 +79,17 @@ export default function SolanaAnchor() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {status?.unanchoredEntries === 0 && !anchoring && (
-                        <span style={{ fontSize: '0.8rem', color: 'var(--accent-green)' }}>✓ All entries anchored</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--accent-green)' }}>All entries anchored</span>
                     )}
                     <button
                         className="btn btn-primary"
                         onClick={handleAnchor}
                         disabled={anchoring || (status?.unanchoredEntries === 0)}
                         style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: status?.unanchoredEntries === 0 ? 0.5 : 1 }}
-                        title={status?.unanchoredEntries === 0 ? 'Semua entry sudah di-anchor. Tambah transaksi baru dulu!' : `Anchor ${status?.unanchoredEntries} entries ke Solana`}
+                        title={status?.unanchoredEntries === 0 ? 'All entries already anchored. Add a new transaction first.' : `Anchor ${status?.unanchoredEntries} entries ke Solana`}
                     >
                         {anchoring ? <Loader size={16} className="spin" /> : <Anchor size={16} />}
-                        {anchoring ? 'Anchoring...' : status?.unanchoredEntries === 0 ? 'All Synced ✓' : `Anchor ${status?.unanchoredEntries} Entries`}
+                        {anchoring ? 'Anchoring...' : status?.unanchoredEntries === 0 ? 'All Synced' : `Anchor ${status?.unanchoredEntries} Entries`}
                     </button>
                 </div>
             </div>
@@ -369,14 +369,14 @@ export default function SolanaAnchor() {
                     <div className="card-body">
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'center', padding: '12px 0' }}>
                             {[
-                                { icon: '📝', title: 'Record Transactions', desc: 'Each transaction gets a SHA-256 hash linked to the previous' },
-                                { icon: '🌳', title: 'Compute Merkle Root', desc: 'All hashes are combined into a single cryptographic root' },
-                                { icon: '⛓️', title: 'Send to Solana', desc: 'Merkle root is stored as a Memo on Solana devnet' },
-                                { icon: '✅', title: 'Anyone Can Verify', desc: 'Re-compute locally and compare with on-chain data' },
+                                { icon: 'Record', title: 'Record Transactions', desc: 'Each transaction gets a SHA-256 hash linked to the previous' },
+                                { icon: 'Merkle', title: 'Compute Merkle Root', desc: 'All hashes are combined into a single cryptographic root' },
+                                { icon: 'Anchor', title: 'Send to Solana', desc: 'Merkle root is stored as a Memo on Solana devnet' },
+                                { icon: 'Verify', title: 'Anyone Can Verify', desc: 'Re-compute locally and compare with on-chain data' },
                             ].map((step, i) => (
                                 <React.Fragment key={i}>
                                     <div style={{ textAlign: 'center', flex: '1 1 140px', maxWidth: 180 }}>
-                                        <div style={{ fontSize: '2rem', marginBottom: 8 }}>{step.icon}</div>
+                                        <div style={{ fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8, color: 'var(--text-secondary)' }}>{step.icon}</div>
                                         <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4 }}>{step.title}</div>
                                         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{step.desc}</div>
                                     </div>

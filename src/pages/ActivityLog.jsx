@@ -10,10 +10,10 @@ const ACTION_ICONS = {
 };
 
 const ENTITY_LABELS = {
-    transaction: '💰 Transaction',
-    donor: '👤 Donor',
-    program: '📋 Program',
-    anchor: '⚓ Solana Anchor',
+    transaction: 'Transaction',
+    donor: 'Donor',
+    program: 'Program',
+    anchor: 'Solana Anchor',
 };
 
 export default function ActivityLog() {
@@ -98,7 +98,7 @@ export default function ActivityLog() {
                             <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading...</div>
                         ) : activities.length === 0 ? (
                             <div className="empty-state" style={{ padding: 40 }}>
-                                <div className="icon">📝</div>
+                                <div className="icon">Activity</div>
                                 <h3>No activity yet</h3>
                                 <p>Actions like creating transactions, editing donors, and anchoring to Solana will appear here.</p>
                             </div>

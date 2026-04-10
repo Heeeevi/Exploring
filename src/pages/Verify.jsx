@@ -118,13 +118,13 @@ export default function Verify() {
                         <div style={{ marginTop: 10, fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
                             {isSolanaSignature(txId.trim()) ? (
                                 <>
-                                    <Anchor size={12} style={{ color: 'var(--accent-purple)' }} /> Detected: <strong style={{ color: 'var(--accent-purple)' }}>Solana TX Signature</strong> — will verify on Solana devnet
+                                    <Anchor size={12} style={{ color: 'var(--accent-purple)' }} /> Detected: <strong style={{ color: 'var(--accent-purple)' }}>Solana TX Signature</strong> - will verify on Solana devnet
                                     {txId.trim().length < 80 && (
-                                        <span style={{ color: 'var(--accent-yellow)', marginLeft: 8 }}>⚠️ Looks truncated ({txId.trim().length} chars, need 86-88). Paste the full signature!</span>
+                                        <span style={{ color: 'var(--accent-yellow)', marginLeft: 8 }}>Looks truncated ({txId.trim().length} chars, need 86-88). Paste the full signature.</span>
                                     )}
                                 </>
                             ) : (
-                                <><LinkIcon size={12} style={{ color: 'var(--accent-cyan)' }} /> Detected: <strong style={{ color: 'var(--accent-cyan)' }}>Transaction ID</strong> — will verify in local ledger</>
+                                <><LinkIcon size={12} style={{ color: 'var(--accent-cyan)' }} /> Detected: <strong style={{ color: 'var(--accent-cyan)' }}>Transaction ID</strong> - will verify in local ledger</>
                             )}
                         </div>
                     )}
@@ -142,14 +142,14 @@ export default function Verify() {
                                     <>
                                         <CheckCircle size={20} style={{ color: 'var(--accent-green)' }} />
                                         <span style={{ color: 'var(--accent-green)', fontWeight: 700 }}>
-                                            ✓ Transaction Found on Solana Blockchain
+                                            Transaction found on Solana Blockchain
                                         </span>
                                     </>
                                 ) : (
                                     <>
                                         <XCircle size={20} style={{ color: 'var(--accent-red)' }} />
                                         <span style={{ color: 'var(--accent-red)', fontWeight: 700 }}>
-                                            ✗ {solanaResult.error || 'Transaction Not Found on Solana'}
+                                            {solanaResult.error || 'Transaction not found on Solana'}
                                         </span>
                                     </>
                                 )}
@@ -303,8 +303,8 @@ export default function Verify() {
                                         <div className="result-item">
                                             <span className="result-label">Chain Link</span>
                                             <span className="result-value" style={{ fontFamily: 'var(--font-sans)' }}>
-                                                {result.chainContext?.isGenesisLinked ? '🏁 Genesis Block' : '🔗 Linked to previous'}
-                                                {result.chainContext?.hasNext ? ' → Has successor' : ' ← Chain tip'}
+                                                {result.chainContext?.isGenesisLinked ? 'Genesis Block' : 'Linked to previous'}
+                                                {result.chainContext?.hasNext ? ' -> Has successor' : ' <- Chain tip'}
                                             </span>
                                         </div>
                                     </div>
@@ -329,7 +329,7 @@ export default function Verify() {
                             <div>
                                 <div className={`chain-status ${chainResult.valid ? 'valid' : 'invalid'}`} style={{ marginBottom: 16 }}>
                                     <span className="status-dot"></span>
-                                    {chainResult.valid ? '✓ Chain Integrity Verified — All hashes match' : `✗ Chain BROKEN at entry ${chainResult.brokenAt}`}
+                                    {chainResult.valid ? 'Chain integrity verified - all hashes match' : `Chain broken at entry ${chainResult.brokenAt}`}
                                 </div>
                                 <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                                     <p><strong>Total Entries:</strong> {chainResult.totalEntries}</p>
