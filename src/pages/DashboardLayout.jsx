@@ -92,6 +92,15 @@ export default function DashboardLayout() {
                 </div>
             </aside>
             <main className="main-content">
+                <button
+                    type="button"
+                    className="dashboard-theme-fab"
+                    onClick={toggleTheme}
+                    aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                    title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                >
+                    {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                </button>
                 <Outlet />
             </main>
         </div>

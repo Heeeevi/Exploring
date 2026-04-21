@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db.cjs');
 const blockchain = require('../blockchain.cjs');
+const { appendAuditEvent } = require('../audit.cjs');
 const { authMiddleware } = require('./auth.cjs');
 
 const router = express.Router();
@@ -54,9 +55,22 @@ router.post('/anchor', authMiddleware, async (req, res) => {
                 VALUES (?, ?, ?, ?, ?, ?)
             `).run(merkleRoot, blockStart, blockEnd, entries.length, `solana:${result.network}`, result.signature);
 
-            // Activity log
-            db.prepare('INSERT INTO activity_log (user_id, user_name, action, entity_type, entity_id, details) VALUES (?, ?, ?, ?, ?, ?)')
-                .run(req.user.id, req.user.name, 'anchor', 'anchor', result.signature, `Anchored ${entries.length} entries to Solana (Merkle: ${merkleRoot.slice(0, 16)}...)`);
+            appendAuditEvent({
+                actorId: req.user.id,
+                actorName: req.user.name,
+                action: 'anchor',
+                entityType: 'anchor',
+                entityId: result.signature,
+                details: `Anchored ${entries.length} entries to Solana (Merkle: ${merkleRoot.slice(0, 16)}...)`,
+                after: {
+                    merkleRoot,
+                    blockStart,
+                    blockEnd,
+                    entryCount: entries.length,
+                    network: result.network,
+                    signature: result.signature,
+                }
+            });
         }
 
         res.json(result);

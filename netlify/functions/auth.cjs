@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { supabase, hasSupabaseConfig } = require('./lib/supabase.cjs');
-const { JWT_SECRET, jsonResponse, verifyAuth, handleOptions, parsePath } = require('./lib/helpers.cjs');
+const { JWT_SECRET, jsonResponse, verifyAuth, handleOptions, parsePath, queryWithRetry, supabaseErrorResponse, classifySupabaseError } = require('./lib/helpers.cjs');
 
 exports.handler = async (event) => {
     if (event.httpMethod === 'OPTIONS') return handleOptions();
@@ -28,15 +28,16 @@ exports.handler = async (event) => {
                 return jsonResponse(400, { error: 'Email and password required' });
             }
 
-            const { data: user, error: userError } = await supabase
-                .from('users')
-                .select('id, name, email, role, password')
-                .eq('email', email)
-                .maybeSingle();
+            const { data: user, error: userError } = await queryWithRetry(() =>
+                supabase
+                    .from('users')
+                    .select('id, name, email, role, password')
+                    .eq('email', email)
+                    .maybeSingle()
+            );
 
             if (userError) {
-                console.error('Auth login query error:', userError.message);
-                return jsonResponse(500, { error: 'Failed to validate credentials' });
+                return supabaseErrorResponse('login', userError);
             }
 
             if (!user || !user.password || !bcrypt.compareSync(password, user.password)) {
@@ -57,20 +58,21 @@ exports.handler = async (event) => {
 
         // POST /auth/register
         if (method === 'POST' && segments[0] === 'register') {
-            const { name, email, password, role } = JSON.parse(event.body || '{}');
+            const { name, email, password } = JSON.parse(event.body || '{}');
             if (!name || !email || !password) {
                 return jsonResponse(400, { error: 'Name, email, and password required' });
             }
 
-            const { data: existing, error: existingError } = await supabase
-                .from('users')
-                .select('id')
-                .eq('email', email)
-                .maybeSingle();
+            const { data: existing, error: existingError } = await queryWithRetry(() =>
+                supabase
+                    .from('users')
+                    .select('id')
+                    .eq('email', email)
+                    .maybeSingle()
+            );
 
             if (existingError) {
-                console.error('Auth register lookup error:', existingError.message);
-                return jsonResponse(500, { error: 'Failed to validate email' });
+                return supabaseErrorResponse('register-lookup', existingError);
             }
 
             if (existing) {
@@ -79,24 +81,27 @@ exports.handler = async (event) => {
 
             const id = crypto.randomUUID();
             const hashedPassword = bcrypt.hashSync(password, 10);
-            const { error: insertError } = await supabase.from('users').insert({
-                id, name, email, password: hashedPassword, role: role || 'staff'
-            });
+            const role = 'staff';
+
+            const { error: insertError } = await queryWithRetry(() =>
+                supabase.from('users').insert({
+                    id, name, email, password: hashedPassword, role
+                })
+            );
 
             if (insertError) {
-                console.error('Auth register insert error:', insertError.message);
-                return jsonResponse(500, { error: 'Failed to create account' });
+                return supabaseErrorResponse('register-insert', insertError);
             }
 
             const token = jwt.sign(
-                { id, name, email, role: role || 'staff' },
+                { id, name, email, role },
                 JWT_SECRET,
                 { expiresIn: '24h' }
             );
 
             return jsonResponse(201, {
                 token,
-                user: { id, name, email, role: role || 'staff' }
+                user: { id, name, email, role }
             });
         }
 
@@ -105,15 +110,16 @@ exports.handler = async (event) => {
             const user = verifyAuth(event);
             if (!user) return jsonResponse(401, { error: 'No token provided' });
 
-            const { data, error: meError } = await supabase
-                .from('users')
-                .select('id, name, email, role, created_at')
-                .eq('id', user.id)
-                .maybeSingle();
+            const { data, error: meError } = await queryWithRetry(() =>
+                supabase
+                    .from('users')
+                    .select('id, name, email, role, created_at')
+                    .eq('id', user.id)
+                    .maybeSingle()
+            );
 
             if (meError) {
-                console.error('Auth me query error:', meError.message);
-                return jsonResponse(500, { error: 'Failed to load user profile' });
+                return supabaseErrorResponse('me', meError);
             }
 
             if (!data) return jsonResponse(404, { error: 'User not found' });
@@ -122,7 +128,15 @@ exports.handler = async (event) => {
 
         return jsonResponse(404, { error: 'Not found' });
     } catch (err) {
-        console.error('Auth error:', err);
-        return jsonResponse(500, { error: err.message });
+        console.error('Auth unhandled error:', err);
+        // Catch-all: also check if this is a Supabase/network error
+        const kind = classifySupabaseError(err);
+        if (kind === 'paused' || kind === 'network') {
+            return jsonResponse(503, {
+                error: 'Database service is temporarily unavailable. Please try again in a moment.',
+                code: 'DB_ERROR'
+            });
+        }
+        return jsonResponse(500, { error: 'Internal server error. Please try again.' });
     }
 };

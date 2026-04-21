@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api';
-import { Shield, Search, CheckCircle, XCircle, Link as LinkIcon, ArrowLeft, ExternalLink, Anchor } from 'lucide-react';
+import { Shield, Search, CheckCircle, XCircle, Link as LinkIcon, ArrowLeft, ExternalLink, Anchor, Send, Mail, Copy } from 'lucide-react';
 import { Sun, Moon } from 'lucide-react';
 import { useTheme } from '../useTheme';
 
@@ -13,6 +13,41 @@ function isSolanaSignature(str) {
     return /^[1-9A-HJ-NP-Za-km-z]{43,}$/.test(str);
 }
 
+const TELEGRAM_BOT_USERNAME = (import.meta.env.VITE_TELEGRAM_BOT_USERNAME || '').replace('@', '').trim();
+const SUPPORT_EMAIL = (import.meta.env.VITE_SUPPORT_EMAIL || 'support@fundnproof.org').trim();
+
+function createVerificationMessage(value) {
+    const raw = (value || '').trim();
+    if (!raw) return 'VERIFY';
+    if (isSolanaSignature(raw)) {
+        return `VERIFY_SOLANA ${raw}`;
+    }
+    return `VERIFY_TX ${raw}`;
+}
+
+function buildTelegramUrl(value) {
+    if (!TELEGRAM_BOT_USERNAME) return null;
+    const command = createVerificationMessage(value);
+    return `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${encodeURIComponent(command)}`;
+}
+
+function buildMailtoUrl(value) {
+    const command = createVerificationMessage(value);
+    const body = [
+        'Halo FundNProof team,',
+        '',
+        'Saya ingin meminta verifikasi data berikut:',
+        command,
+        '',
+        'Mohon kirimkan hasil verifikasi chain integrity dan status anchor Solana.',
+        '',
+        'Terima kasih.'
+    ].join('\n');
+
+    const subject = encodeURIComponent('Verification Request - FundNProof');
+    return `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${encodeURIComponent(body)}`;
+}
+
 export default function Verify() {
     const { txId: urlTxId } = useParams();
     const [txId, setTxId] = useState(urlTxId || '');
@@ -20,9 +55,25 @@ export default function Verify() {
     const [solanaResult, setSolanaResult] = useState(null);
     const [chainResult, setChainResult] = useState(null);
     const [anchorStatus, setAnchorStatus] = useState(null);
+    const [copied, setCopied] = useState(false);
     const [loading, setLoading] = useState(false);
     const [chainLoading, setChainLoading] = useState(false);
     const { theme, toggleTheme } = useTheme();
+
+    const currentVerificationValue = (txId || '').trim();
+    const telegramUrl = buildTelegramUrl(currentVerificationValue);
+    const mailtoUrl = buildMailtoUrl(currentVerificationValue);
+
+    const handleCopyRequest = async () => {
+        const text = createVerificationMessage(currentVerificationValue);
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1600);
+        } catch (_) {
+            setCopied(false);
+        }
+    };
 
     useEffect(() => {
         if (urlTxId) {
@@ -128,6 +179,35 @@ export default function Verify() {
                             )}
                         </div>
                     )}
+
+                    <div style={{ marginTop: 14, padding: 12, border: '1px solid var(--border-color)', borderRadius: 10, background: 'var(--bg-card)' }}>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 10 }}>
+                            Low-cost channels: Telegram for instant check, email for formal fallback.
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                            {telegramUrl && (
+                                <a
+                                    href={telegramUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-secondary btn-sm"
+                                >
+                                    <Send size={14} /> Verify via Telegram
+                                </a>
+                            )}
+                            <a href={mailtoUrl} className="btn btn-ghost btn-sm">
+                                <Mail size={14} /> Request via Email
+                            </a>
+                            <button type="button" className="btn btn-ghost btn-sm" onClick={handleCopyRequest}>
+                                <Copy size={14} /> {copied ? 'Copied' : 'Copy Verify Command'}
+                            </button>
+                        </div>
+                        {!TELEGRAM_BOT_USERNAME && (
+                            <div style={{ marginTop: 8, fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                                Telegram button hidden. Set VITE_TELEGRAM_BOT_USERNAME to enable bot deep-link.
+                            </div>
+                        )}
+                    </div>
 
                     {/* Solana verification result */}
                     {solanaResult && (

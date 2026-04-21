@@ -1,5 +1,6 @@
 const express = require('express');
 const db = require('../db.cjs');
+const { verifyAuditChain } = require('../audit.cjs');
 const { authMiddleware } = require('./auth.cjs');
 
 const router = express.Router();
@@ -60,7 +61,12 @@ router.get('/stats', authMiddleware, (req, res) => {
         LIMIT 5
     `).all();
 
-    res.json({ today, thisWeek, thisMonth, total, byType, byAction, recentUsers });
+    res.json({ today, thisWeek, thisMonth, total, byType, byAction, recentUsers, auditIntegrity: verifyAuditChain() });
+});
+
+// GET /api/activity/integrity - cryptographic integrity of immutable audit chain
+router.get('/integrity', authMiddleware, (req, res) => {
+    res.json(verifyAuditChain());
 });
 
 module.exports = router;

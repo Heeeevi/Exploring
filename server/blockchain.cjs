@@ -105,11 +105,13 @@ class BlockchainLayer {
      * Verify a single transaction's existence in the ledger
      */
     verifyTransaction(txId) {
-        const entry = db.prepare('SELECT * FROM ledger_entries WHERE tx_id = ?').get(txId);
+        const entry = db.prepare('SELECT * FROM ledger_entries WHERE tx_id = ? ORDER BY id DESC LIMIT 1').get(txId);
 
         if (!entry) {
             return { found: false, message: 'Transaction not found in ledger' };
         }
+
+        const versions = db.prepare('SELECT COUNT(*) as count FROM ledger_entries WHERE tx_id = ?').get(txId).count;
 
         // Also check chain context
         const prevEntry = db.prepare('SELECT * FROM ledger_entries WHERE hash = ?').get(entry.prev_hash);
@@ -121,6 +123,7 @@ class BlockchainLayer {
             prevHash: entry.prev_hash,
             timestamp: entry.timestamp,
             dataSnapshot: JSON.parse(entry.data_snapshot),
+            versions,
             chainContext: {
                 hasPrevious: !!prevEntry || entry.prev_hash === GENESIS_HASH,
                 hasNext: !!nextEntry,

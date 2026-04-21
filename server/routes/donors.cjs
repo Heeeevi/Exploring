@@ -1,6 +1,7 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../db.cjs');
+const { appendAuditEvent } = require('../audit.cjs');
 const { authMiddleware } = require('./auth.cjs');
 
 const router = express.Router();
@@ -27,8 +28,15 @@ router.post('/', authMiddleware, (req, res) => {
     db.prepare('INSERT INTO donors (id, name, email, organization, country) VALUES (?, ?, ?, ?, ?)')
         .run(id, name, email || null, organization || null, country || null);
 
-    db.prepare('INSERT INTO activity_log (user_id, user_name, action, entity_type, entity_id, details) VALUES (?, ?, ?, ?, ?, ?)')
-        .run(req.user.id, req.user.name, 'create', 'donor', id, `Added donor: ${name}`);
+    appendAuditEvent({
+        actorId: req.user.id,
+        actorName: req.user.name,
+        action: 'create',
+        entityType: 'donor',
+        entityId: id,
+        details: `Added donor: ${name}`,
+        after: { id, name, email: email || null, organization: organization || null, country: country || null }
+    });
 
     res.status(201).json({ id, name, email, organization, country, total_donated: 0 });
 });
@@ -41,7 +49,9 @@ router.get('/:id', authMiddleware, (req, res) => {
     const transactions = db.prepare(`
     SELECT t.*, le.hash as blockchain_hash 
     FROM transactions t 
-    LEFT JOIN ledger_entries le ON le.tx_id = t.id
+        LEFT JOIN ledger_entries le ON le.id = (
+            SELECT id FROM ledger_entries WHERE tx_id = t.id ORDER BY id DESC LIMIT 1
+        )
     WHERE t.donor_id = ? 
     ORDER BY t.created_at DESC
   `).all(req.params.id);
@@ -58,9 +68,16 @@ router.put('/:id', authMiddleware, (req, res) => {
     db.prepare('UPDATE donors SET name = ?, email = ?, organization = ?, country = ?, updated_at = datetime(\'now\') WHERE id = ?')
         .run(name || existing.name, email !== undefined ? email : existing.email, organization !== undefined ? organization : existing.organization, country !== undefined ? country : existing.country, req.params.id);
 
-    // Activity log
-    db.prepare('INSERT INTO activity_log (user_id, user_name, action, entity_type, entity_id, details) VALUES (?, ?, ?, ?, ?, ?)')
-        .run(req.user.id, req.user.name, 'update', 'donor', req.params.id, `Updated donor: ${name || existing.name}`);
+    appendAuditEvent({
+        actorId: req.user.id,
+        actorName: req.user.name,
+        action: 'update',
+        entityType: 'donor',
+        entityId: req.params.id,
+        details: `Updated donor: ${name || existing.name}`,
+        before: existing,
+        after: db.prepare('SELECT * FROM donors WHERE id = ?').get(req.params.id)
+    });
 
     res.json({ id: req.params.id, name: name || existing.name, email, organization, country });
 });
@@ -78,8 +95,16 @@ router.delete('/:id', authMiddleware, (req, res) => {
 
     db.prepare('DELETE FROM donors WHERE id = ?').run(req.params.id);
 
-    db.prepare('INSERT INTO activity_log (user_id, user_name, action, entity_type, entity_id, details) VALUES (?, ?, ?, ?, ?, ?)')
-        .run(req.user.id, req.user.name, 'delete', 'donor', req.params.id, `Deleted donor: ${existing.name}`);
+    appendAuditEvent({
+        actorId: req.user.id,
+        actorName: req.user.name,
+        action: 'delete',
+        entityType: 'donor',
+        entityId: req.params.id,
+        details: `Deleted donor: ${existing.name}`,
+        before: existing,
+        after: null
+    });
 
     res.json({ message: 'Donor deleted' });
 });

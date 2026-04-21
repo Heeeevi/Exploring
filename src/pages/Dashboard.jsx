@@ -12,6 +12,7 @@ export default function Dashboard() {
     const [stats, setStats] = useState(null);
     const [chartData, setChartData] = useState([]);
     const [solana, setSolana] = useState(null);
+    const [reconciliation, setReconciliation] = useState(null);
     const [recentTx, setRecentTx] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -20,12 +21,14 @@ export default function Dashboard() {
             api.getTransactionStats(),
             api.getRecentChart(30),
             api.solanaStatus().catch(() => null),
+            api.reconciliationStatus().catch(() => null),
             api.getTransactions('limit=5').catch(() => ({ transactions: [] })),
         ])
-            .then(([s, c, sol, tx]) => {
+            .then(([s, c, sol, rec, tx]) => {
                 setStats(s);
                 setChartData(c);
                 setSolana(sol);
+                setReconciliation(rec);
                 setRecentTx(tx.transactions || []);
             })
             .finally(() => setLoading(false));
@@ -100,6 +103,46 @@ export default function Dashboard() {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                        {/* Bank Reconciliation */}
+                        <div className="card animate-in" style={{ flex: 1, border: reconciliation?.has_mismatch ? '1px solid rgba(239, 68, 68, 0.24)' : '1px solid rgba(16, 185, 129, 0.22)' }}>
+                            <div className="card-header" style={{ paddingBottom: 8 }}>
+                                <h2>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <Shield size={18} style={{ color: reconciliation?.has_mismatch ? 'var(--accent-red)' : 'var(--accent-green)' }} />
+                                        Bank Reconciliation
+                                    </div>
+                                </h2>
+                                <Link to="/dashboard/finance" className="btn btn-ghost btn-sm" style={{ fontSize: '0.75rem' }}>
+                                    Run Check →
+                                </Link>
+                            </div>
+                            <div className="card-body" style={{ padding: '12px 20px' }}>
+                                {reconciliation ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: '0.85rem' }}>
+                                        <div className={`chain-status ${reconciliation.has_mismatch ? 'invalid' : 'valid'}`} style={{ marginBottom: 4 }}>
+                                            <span className="status-dot"></span>
+                                            {reconciliation.has_mismatch ? 'Mismatch detected between bank and ledger' : 'Bank and ledger are aligned'}
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ color: 'var(--text-muted)' }}>Accounts Tracked</span>
+                                            <span style={{ fontWeight: 600 }}>{reconciliation.total_accounts}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ color: 'var(--text-muted)' }}>Unmatched Items</span>
+                                            <span style={{ fontWeight: 600, color: reconciliation.total_unmatched > 0 ? 'var(--accent-red)' : 'var(--accent-green)' }}>{reconciliation.total_unmatched}</span>
+                                        </div>
+                                        {reconciliation.latest_runs?.[0] && (
+                                            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: 2 }}>
+                                                Latest: {reconciliation.latest_runs[0].account_name} ({new Date(reconciliation.latest_runs[0].created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No reconciliation run yet. Import bank statements and run comparison.</p>
+                                )}
+                            </div>
+                        </div>
+
                         {/* Blockchain Status */}
                         <div className="card animate-in" style={{ flex: 1 }}>
                             <div className="card-header">

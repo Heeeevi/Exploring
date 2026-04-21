@@ -61,7 +61,9 @@ router.get('/export', (req, res) => {
     FROM transactions t
     LEFT JOIN donors d ON t.donor_id = d.id
     LEFT JOIN programs p ON t.program_id = p.id
-    LEFT JOIN ledger_entries le ON le.tx_id = t.id
+        LEFT JOIN ledger_entries le ON le.id = (
+            SELECT id FROM ledger_entries WHERE tx_id = t.id ORDER BY id DESC LIMIT 1
+        )
     ORDER BY t.created_at DESC
   `).all();
 

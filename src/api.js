@@ -15,21 +15,50 @@ async function request(path, options = {}) {
         throw new Error('Cannot connect to server. Check your network connection.');
     }
 
+    // On 401, clear auth and redirect to login — but only if NOT already on auth pages
     if (res.status === 401) {
-        localStorage.removeItem('terp_token');
-        localStorage.removeItem('terp_user');
-        window.location.href = '/login';
-        throw new Error('Unauthorized');
+        const isAuthRoute = path.startsWith('/auth/login') || path.startsWith('/auth/register');
+        if (!isAuthRoute) {
+            localStorage.removeItem('terp_token');
+            localStorage.removeItem('terp_user');
+            window.location.href = '/login';
+        }
+        // Still try to parse the error body for auth routes
+        let data;
+        try { data = await res.json(); } catch { data = {}; }
+        throw new Error(data.error || 'Invalid credentials');
     }
 
+    // Try to parse response as JSON, with text fallback
     let data;
-    try {
-        data = await res.json();
-    } catch (err) {
-        throw new Error(`Server error (${res.status}). Please try again.`);
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+        try {
+            data = await res.json();
+        } catch {
+            throw new Error(`Server returned invalid response (${res.status}). Please try again.`);
+        }
+    } else {
+        // Server returned non-JSON (e.g. HTML error page from Express crash)
+        let text = '';
+        try { text = await res.text(); } catch { /* ignore */ }
+
+        if (res.status >= 500) {
+            throw new Error(`Server error (${res.status}). The server may need to restart — please try again.`);
+        }
+        throw new Error(`Unexpected response (${res.status}). Please try again.`);
     }
 
-    if (!res.ok) throw new Error(data.error || 'Request failed');
+    if (!res.ok) {
+        // Provide actionable messages for known error codes
+        if (data.code === 'DB_PAUSED') {
+            throw new Error('Database is waking up after inactivity. Please wait 30-60 seconds and try again.');
+        }
+        if (data.code === 'DB_UNREACHABLE' || data.code === 'DB_ERROR') {
+            throw new Error(data.error || 'Service temporarily unavailable. Please try again in a moment.');
+        }
+        throw new Error(data.error || `Request failed (${res.status})`);
+    }
     return data;
 }
 
@@ -46,6 +75,7 @@ export const api = {
     createTransaction: (data) => request('/transactions', { method: 'POST', body: JSON.stringify(data) }),
     getTransaction: (id) => request(`/transactions/${id}`),
     updateTransaction: (id, data) => request(`/transactions/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    createTransactionCorrection: (id, data) => request(`/transactions/${id}/correction`, { method: 'POST', body: JSON.stringify(data) }),
 
     // Donors
     getDonors: () => request('/donors'),
@@ -79,4 +109,15 @@ export const api = {
     // Activity Log
     getActivities: (page = 1, limit = 50, entityType = '') => request(`/activity?page=${page}&limit=${limit}${entityType ? '&entity_type=' + entityType : ''}`),
     getActivityStats: () => request('/activity/stats'),
+
+    // Bank Reconciliation (factual bank-vs-ledger checks)
+    reconciliationAccounts: () => request('/reconciliation/accounts'),
+    reconciliationProviders: () => request('/reconciliation/providers'),
+    reconciliationCreateAccount: (data) => request('/reconciliation/accounts', { method: 'POST', body: JSON.stringify(data) }),
+    reconciliationImport: (data) => request('/reconciliation/import', { method: 'POST', body: JSON.stringify(data) }),
+    reconciliationSync: (data) => request('/reconciliation/sync', { method: 'POST', body: JSON.stringify(data) }),
+    reconciliationRun: (data) => request('/reconciliation/run', { method: 'POST', body: JSON.stringify(data) }),
+    reconciliationLocks: () => request('/reconciliation/locks'),
+    reconciliationReleaseLock: (id) => request(`/reconciliation/locks/${id}/release`, { method: 'POST' }),
+    reconciliationStatus: () => request('/reconciliation/status'),
 };

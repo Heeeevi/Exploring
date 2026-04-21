@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom';
 import { ArrowDown, ArrowUpRight, CircleDot, Sparkles } from 'lucide-react';
 
 const TOKENS = [
-    { id: 'cashflow', label: 'DONATION FLOW', kind: 'pill', x: 14, y: 32, rotate: 0, depth: 1.1 },
-    { id: 'yield', label: 'HASH PROOF', kind: 'pill', x: 35, y: 32, rotate: 0, depth: 1.3 },
-    { id: 'borefi', label: 'MERKLE ROOT', kind: 'pill', x: 56, y: 32, rotate: 0, depth: 1.5 },
-    { id: 'sme', label: 'PUBLIC LEDGER', kind: 'pill', x: 77, y: 32, rotate: 0, depth: 1.2 },
-    { id: 'asterisk', label: '*', kind: 'disc', x: 86, y: 32, rotate: 0, depth: 2.0 },
-    { id: 'down', label: '↓', kind: 'disc', x: 94, y: 32, rotate: 0, depth: 1.8 },
-    { id: 'dot-a', label: '', kind: 'dot', x: 93, y: 15, rotate: 0, depth: 1.1 },
-    { id: 'dot-b', label: '', kind: 'dot-half', x: 98, y: 8, rotate: 0, depth: 0.9 }
+    { id: 'cashflow', label: 'DONATION FLOW', kind: 'pill-tilt', x: 12, y: 26, rotate: -31, depth: 1.1 },
+    { id: 'yield', label: 'HASH PROOF', kind: 'pill', x: 34, y: 30, rotate: -5, depth: 1.3 },
+    { id: 'borefi', label: 'MERKLE ROOT', kind: 'pill', x: 56, y: 24, rotate: 0, depth: 1.5 },
+    { id: 'sme', label: 'PUBLIC LEDGER', kind: 'pill', x: 78, y: 18, rotate: 0, depth: 1.2 },
+    { id: 'asterisk', label: '*', kind: 'disc', x: 87, y: 30, rotate: 0, depth: 2.0 },
+    { id: 'down', label: '↓', kind: 'disc', x: 95, y: 30, rotate: 0, depth: 1.8 },
+    { id: 'dot-a', label: '', kind: 'dot', x: 94, y: 21, rotate: 0, depth: 1.1 },
+    { id: 'dot-b', label: '', kind: 'dot-half', x: 96, y: 10, rotate: 0, depth: 0.9 }
 ];
 
 export default function Landing() {
@@ -24,6 +24,28 @@ export default function Landing() {
     const [protectedZones, setProtectedZones] = useState([]);
     const [titleTop, setTitleTop] = useState(null);
     const [draggingTokenId, setDraggingTokenId] = useState(null);
+    const [showThemeHint, setShowThemeHint] = useState(false);
+    const [theme, setTheme] = useState(() => {
+        const saved = localStorage.getItem('theme');
+        if (saved === 'light' || saved === 'dark') return saved;
+        return document.documentElement.getAttribute('data-theme') || 'dark';
+    });
+
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    useEffect(() => {
+        const seen = localStorage.getItem('landing_theme_hint_seen');
+        setShowThemeHint(!seen);
+    }, []);
+
+    const handleThemeToggle = () => {
+        setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+        setShowThemeHint(false);
+        localStorage.setItem('landing_theme_hint_seen', '1');
+    };
 
     useEffect(() => {
         const update = () => {
@@ -226,6 +248,23 @@ export default function Landing() {
                     <span>POWERING PUBLIC TRUST</span>
                     <ArrowUpRight size={18} />
                     <span>Where did my money go? Turn it into proof.</span>
+                </div>
+
+                <div className="landing-v2-mode-stack">
+                    {showThemeHint && (
+                        <div className="landing-v2-mode-hint" role="status">
+                            Click me • Change mode
+                        </div>
+                    )}
+                    <button
+                        type="button"
+                        className={`landing-v2-mode-toggle ${showThemeHint ? 'is-pulsing' : ''}`}
+                        onClick={handleThemeToggle}
+                        aria-label="Toggle dark and light mode"
+                        title="Toggle dark and light mode"
+                    >
+                        <span className="v2-half-dot" />
+                    </button>
                 </div>
 
                 <div

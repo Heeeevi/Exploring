@@ -97,7 +97,96 @@ db.exec(`
     details TEXT,
     created_at TEXT DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS audit_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    actor_id TEXT,
+    actor_name TEXT,
+    action TEXT NOT NULL,
+    entity_type TEXT,
+    entity_id TEXT,
+    payload_json TEXT NOT NULL,
+    prev_hash TEXT NOT NULL,
+    event_hash TEXT NOT NULL UNIQUE,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_audit_events_created_at ON audit_events(created_at);
+
+  CREATE TABLE IF NOT EXISTS bank_accounts (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    bank_name TEXT,
+    account_number_masked TEXT,
+    currency TEXT DEFAULT 'USD',
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS bank_statement_entries (
+    id TEXT PRIMARY KEY,
+    bank_account_id TEXT NOT NULL REFERENCES bank_accounts(id),
+    entry_date TEXT NOT NULL,
+    amount REAL NOT NULL,
+    direction TEXT NOT NULL CHECK(direction IN ('credit', 'debit')),
+    description TEXT,
+    external_ref TEXT,
+    running_balance REAL,
+    imported_by TEXT REFERENCES users(id),
+    source TEXT DEFAULT 'manual',
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_bank_statement_entries_account_date
+    ON bank_statement_entries(bank_account_id, entry_date);
+
+  CREATE TABLE IF NOT EXISTS reconciliation_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bank_account_id TEXT NOT NULL REFERENCES bank_accounts(id),
+    period_start TEXT NOT NULL,
+    period_end TEXT NOT NULL,
+    ledger_income REAL DEFAULT 0,
+    ledger_expense REAL DEFAULT 0,
+    bank_credit REAL DEFAULT 0,
+    bank_debit REAL DEFAULT 0,
+    delta_income REAL DEFAULT 0,
+    delta_expense REAL DEFAULT 0,
+    matched_count INTEGER DEFAULT 0,
+    unmatched_count INTEGER DEFAULT 0,
+    details_json TEXT,
+    created_by TEXT REFERENCES users(id),
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_reconciliation_runs_account_created
+    ON reconciliation_runs(bank_account_id, created_at DESC);
+
+  CREATE TABLE IF NOT EXISTS reconciliation_locks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    period_start TEXT NOT NULL,
+    period_end TEXT NOT NULL,
+    reason TEXT,
+    is_active INTEGER DEFAULT 1,
+    created_by TEXT REFERENCES users(id),
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_reconciliation_locks_period
+    ON reconciliation_locks(period_start, period_end, is_active);
 `);
+
+function ensureColumn(table, column, typeDef) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all();
+  const exists = cols.some((c) => c.name === column);
+  if (!exists) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${typeDef}`);
+  }
+}
+
+ensureColumn('bank_accounts', 'provider', "TEXT DEFAULT 'manual'");
+ensureColumn('bank_accounts', 'provider_config_json', 'TEXT');
+ensureColumn('bank_accounts', 'last_synced_at', 'TEXT');
 
 // Migrate legacy default admin email and ensure FundNProof default admin exists.
 const LEGACY_ADMIN_EMAIL = 'admin@transparenterp.org';
