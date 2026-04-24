@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Moon, Sun, Sparkles, ShieldCheck, CircleAlert, ArrowUpRight } from 'lucide-react';
+import { Moon, Sun, TrendingUp, ShieldCheck, CircleAlert, ArrowUpRight, Shield } from 'lucide-react';
 import { useTheme } from '../useTheme.js';
 
 function useInView(options = { threshold: 0.2 }) {
@@ -68,34 +68,36 @@ export default function About() {
 
     return (
         <div className="landing-page landing-clean about-page">
-            <nav className="landing-clean-nav">
-                <div className="landing-logo">
-                    <img src="/FNP Logo.png" alt="FundNProof logo" className="logo-icon" />
-                    <span>FundNProof</span>
-                </div>
-                <div className="landing-clean-actions">
-                    <Link to="/" className="btn btn-ghost btn-sm">Home</Link>
-                    <Link to="/public" className="btn btn-ghost btn-sm">Public Ledger</Link>
-                    <button type="button" className="btn btn-ghost btn-sm theme-toggle" onClick={toggleTheme}>
-                        {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-                    </button>
-                    <Link to="/login" className="btn btn-secondary btn-sm">Sign In</Link>
-                </div>
-            </nav>
+            <div className="fronsciers-nav-wrapper">
+                <nav className="fronsciers-nav">
+                    <Link to="/" className="landing-v2-brand" style={{display: 'flex', alignItems: 'center', marginLeft: 16, fontWeight: 800, fontSize: '1.3rem', color: 'var(--text-primary)', textDecoration: 'none'}}>
+                        <img src="/FNP Logo.png" alt="FundNProof logo" style={{width:30, height:30, objectFit:'contain', marginRight: 8, background: 'var(--bg-card)', borderRadius: 10, padding: 3, border: '1px solid var(--border-color)'}} />
+                        FUNDNPROOF
+                    </Link>
+                    <div className="landing-v2-actions" style={{display: 'flex', gap: 16, alignItems: 'center', marginRight: 16}}>
+                        <Link to="/" className="btn btn-ghost btn-sm text-muted-foreground">Home</Link>
+                        <Link to="/public" className="btn btn-ghost btn-sm text-muted-foreground">Public Ledger</Link>
+                        <button type="button" className="btn btn-ghost btn-sm theme-toggle text-muted-foreground" onClick={toggleTheme}>
+                            {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+                        </button>
+                        <Link to="/login" className="btn btn-secondary btn-sm" style={{borderRadius: 9999}}>Sign In</Link>
+                    </div>
+                </nav>
+            </div>
 
             <main className="landing-clean-main">
-                <section className="landing-clean-hero about-hero-minimal">
+                <section className="landing-clean-hero about-hero-minimal fade-up">
                     <div className="landing-clean-kicker">
-                        <span>Trust infrastructure for public money in Indonesia</span>
+                        <span className="uppercase-kicker tracking-widest text-muted-foreground">Trust infrastructure for public money in Indonesia</span>
                     </div>
-                    <h1>FundNProof</h1>
-                    <p>
+                    <h1 className="tracking-tight" style={{fontSize: '3.5rem', fontWeight: 600, marginTop: 16, marginBottom: 16}}>FundNProof</h1>
+                    <p className="text-muted-foreground leading-relaxed" style={{fontSize: '1.125rem'}}>
                         Every year, more than Rp40 trillion in donations, zakat, and social funds flow through systems that people cannot independently verify.
                         FundNProof answers "Where did my money actually go?" with verifiable proof, not promises.
                     </p>
                 </section>
 
-                <section className="landing-clean-section about-plain-section">
+                <section className="landing-clean-section about-plain-section fade-up delay-100">
                     <div className="landing-clean-heading">
                         <CircleAlert size={18} />
                         <h2>Problem and Opportunity</h2>
@@ -124,32 +126,54 @@ export default function About() {
                     </div>
                 </section>
 
-                <section className="landing-clean-section about-plain-section">
-                    <div className="landing-clean-heading">
-                        <ShieldCheck size={18} />
-                        <h2>How FundNProof Works</h2>
-                    </div>
-                    <p>
-                        FundNProof combines ERP-level usability, cryptographic integrity, and Solana anchoring so every transaction is recorded,
-                        tamper-evident, and publicly verifiable.
-                    </p>
-                    <ol className="about-flow-list">
-                        <li>Transactions are recorded in a familiar operational dashboard.</li>
-                        <li>Each record is hashed and linked, making silent edits detectable.</li>
-                        <li>Batches are anchored to Solana through Merkle proofs.</li>
-                        <li>Public verification can be done without trusting internal claims.</li>
-                    </ol>
-                    <div className="about-inline-note">
-                        Off-chain for usability, on-chain for proof. This is the core trust model.
+                <div className="h-px w-full" style={{background: 'var(--border-color)', margin: '4rem 0'}} role="separator" aria-orientation="horizontal"></div>
+
+                <section className="fronsciers-features-bg fade-up delay-200">
+                    <div style={{padding: '6rem 2rem', maxWidth: '80rem', margin: '0 auto'}}>
+                        <div style={{display: 'flex', flexDirection: 'column', gap: '3rem', alignItems: 'flex-start'}}>
+                            <div style={{maxWidth: 600}}>
+                                <h2 className="tracking-tight" style={{fontSize: '2.5rem', fontWeight: 600, marginBottom: 16}}>How FundNProof Works</h2>
+                                <p style={{fontSize: '1.25rem', opacity: 0.8, lineHeight: 1.6}}>
+                                    FundNProof combines ERP-level usability, cryptographic integrity, and Solana anchoring so every transaction is recorded,
+                                    tamper-evident, and publicly verifiable.
+                                </p>
+                            </div>
+                            
+                            <div style={{display: 'flex', flexDirection: 'column', gap: '2rem', width: '100%'}}>
+                                <div style={{display: 'flex', gap: '1.5rem', alignItems: 'flex-start'}}>
+                                    <div style={{fontSize: '2.5rem'}}>⚡️</div>
+                                    <div style={{flex: 1}}>
+                                        <h3 className="tracking-tight" style={{fontSize: '1.25rem', fontWeight: 600, marginBottom: 8}}>Familiar Dashboard</h3>
+                                        <p style={{opacity: 0.8}}>Transactions are recorded in a familiar operational dashboard without needing crypto knowledge.</p>
+                                        <div style={{height: 1, background: 'rgba(255,255,255,0.2)', marginTop: 24}}></div>
+                                    </div>
+                                </div>
+                                <div style={{display: 'flex', gap: '1.5rem', alignItems: 'flex-start'}}>
+                                    <div style={{fontSize: '2.5rem'}}>🔒</div>
+                                    <div style={{flex: 1}}>
+                                        <h3 className="tracking-tight" style={{fontSize: '1.25rem', fontWeight: 600, marginBottom: 8}}>Cryptographic Proof</h3>
+                                        <p style={{opacity: 0.8}}>Each record is hashed and linked, making silent edits detectable.</p>
+                                        <div style={{height: 1, background: 'rgba(255,255,255,0.2)', marginTop: 24}}></div>
+                                    </div>
+                                </div>
+                                <div style={{display: 'flex', gap: '1.5rem', alignItems: 'flex-start'}}>
+                                    <div style={{fontSize: '2.5rem'}}>🌍</div>
+                                    <div style={{flex: 1}}>
+                                        <h3 className="tracking-tight" style={{fontSize: '1.25rem', fontWeight: 600, marginBottom: 8}}>Public Verification</h3>
+                                        <p style={{opacity: 0.8}}>Batches are anchored to Solana. Public verification can be done without trusting internal claims.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
                 <section
                     ref={businessModelRef}
-                    className={`landing-clean-section about-business-model ${businessModelVisible ? 'is-visible' : ''}`}
+                    className={`landing-clean-section about-business-model fade-up delay-300 ${businessModelVisible ? 'is-visible' : ''}`}
                 >
                     <div className="landing-clean-heading">
-                        <Sparkles size={18} />
+                        <TrendingUp size={18} />
                         <h2>Business Model</h2>
                     </div>
                     <p className="about-business-model-intro">
@@ -223,7 +247,7 @@ export default function About() {
                     </p>
                 </section>
 
-                <section className="about-closing">
+                <section className="about-closing fade-up delay-400">
                     <h3>One-line pitch</h3>
                     <p>FundNProof: turning "Where did my money go?" from a question into something anyone can verify.</p>
                     <div className="landing-clean-ctas">

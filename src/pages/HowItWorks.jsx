@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useTheme } from '../useTheme';
-import { Shield, ArrowLeft, Eye, Link as LinkIcon, DollarSign, Globe, Cpu } from 'lucide-react';
+import { Shield, ArrowLeft, Eye, Link as LinkIcon, DollarSign, Globe, FileText } from 'lucide-react';
 import { Sun, Moon } from 'lucide-react';
 
 export default function HowItWorks() {
@@ -20,7 +20,7 @@ export default function HowItWorks() {
             desc: 'Transactions are entered in the dashboard using a normal financial workflow.',
         },
         {
-            icon: <Cpu size={20} />,
+            icon: <FileText size={20} />,
             title: 'System creates a hash',
             desc: 'Each record is turned into a cryptographic fingerprint using SHA-256.',
         },
@@ -60,42 +60,41 @@ export default function HowItWorks() {
         },
     ];
 
+    const [openFaq, setOpenFaq] = useState(null);
+
     return (
         <div className="public-layout">
-            <nav className="public-nav">
-                <div className="landing-logo">
-                    <img src="/FNP Logo.png" alt="FundNProof logo" className="logo-icon" />
-                    <span>FundNProof</span>
-                    <span className="badge badge-chain" style={{ marginLeft: 8 }}>How It Works</span>
-                </div>
-                <div className="public-nav-actions">
-                    <button
-                        className="theme-toggle"
-                        onClick={toggleTheme}
-                        type="button"
-                        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-                        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-                    >
-                        {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-                    </button>
-                    <Link to="/public" className="btn btn-secondary btn-sm">
-                        <ArrowLeft size={14} /> Public Ledger
+            <div className="fronsciers-nav-wrapper">
+                <nav className="fronsciers-nav">
+                    <Link to="/" className="landing-v2-brand" style={{display: 'flex', alignItems: 'center', marginLeft: 16, fontWeight: 800, fontSize: '1.3rem', color: 'var(--text-primary)', textDecoration: 'none'}}>
+                        <img src="/FNP Logo.png" alt="FundNProof logo" style={{width:30, height:30, objectFit:'contain', marginRight: 8, background: 'var(--bg-card)', borderRadius: 10, padding: 3, border: '1px solid var(--border-color)'}} />
+                        FUNDNPROOF
                     </Link>
-                </div>
-            </nav>
+                    <div className="landing-v2-actions" style={{display: 'flex', gap: 16, alignItems: 'center', marginRight: 16}}>
+                        <Link to="/public" className="btn btn-ghost btn-sm text-muted-foreground">Public Ledger</Link>
+                        <button type="button" className="btn btn-ghost btn-sm theme-toggle text-muted-foreground" onClick={toggleTheme}>
+                            {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+                        </button>
+                        <Link to="/login" className="btn btn-secondary btn-sm" style={{borderRadius: 9999}}>Sign In</Link>
+                    </div>
+                </nav>
+            </div>
 
             <div className="public-body" style={{ maxWidth: 900, margin: '0 auto' }}>
-                <div style={{ textAlign: 'center', padding: '48px 0 40px' }}>
-                    <h1 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: 12, lineHeight: 1.2 }}>
-                        Bagaimana FundNProof Menjamin Transparansi?
+                <div style={{ textAlign: 'center', padding: '96px 0 40px' }} className="fade-up">
+                    <div className="landing-clean-kicker" style={{justifyContent: 'center', marginBottom: 16}}>
+                        <span className="uppercase-kicker tracking-widest text-muted-foreground">Blockchain-Powered Transparency</span>
+                    </div>
+                    <h1 className="tracking-tight" style={{ fontSize: '3.5rem', fontWeight: 600, marginBottom: 16, lineHeight: 1.1 }}>
+                        Open, Verifiable, On-Chain
                     </h1>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: 600, margin: '0 auto', lineHeight: 1.6 }}>
-                        Panduan sederhana tentang cara kerja sistem transparansi keuangan berbasis blockchain untuk organisasi nirlaba.
+                    <p className="text-muted-foreground leading-relaxed" style={{ fontSize: '1.125rem', maxWidth: 700, margin: '0 auto' }}>
+                        Publish financial transactions faster with transparent proof, permanent storage via Solana, and truly open access. Built for organizations who value rigor, clarity, and credibility.
                     </p>
                 </div>
 
                 {stats && (
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: 32, padding: '20px 0', marginBottom: 40, borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
+                    <div className="fade-up delay-100" style={{ display: 'flex', justifyContent: 'center', gap: 32, padding: '20px 0', marginBottom: 40, borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
                         <div style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--accent-green)' }}>{stats.txCount}</div>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Transaksi Tercatat</div>
@@ -113,7 +112,7 @@ export default function HowItWorks() {
                     </div>
                 )}
 
-                <div style={{ marginBottom: 56 }}>
+                <div style={{ marginBottom: 56 }} className="fade-up delay-200">
                     <h2 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: 28, textAlign: 'center' }}>
                         Alur Transparansi - Dari Input Sampai Verifikasi
                     </h2>
@@ -131,20 +130,37 @@ export default function HowItWorks() {
                     ))}
                 </div>
 
-                <div style={{ marginBottom: 56 }}>
-                    <h2 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: 28, textAlign: 'center' }}>
-                        Pertanyaan Umum
-                    </h2>
-
-                    {faqs.map((item, i) => (
-                        <div key={i} style={{ padding: '20px 24px', marginBottom: 12, background: 'var(--gradient-card)', border: '1px solid var(--border-color)', borderRadius: 12 }}>
-                            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 8, color: 'var(--text-accent)' }}>Q: {item.q}</h3>
-                            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.7 }}>{item.a}</p>
-                        </div>
-                    ))}
+                <div style={{margin: '6rem 0'}} className="fade-up delay-300">
+                    <div className="custom-scroll-text-container">
+                        <div className="custom-scroll-text">Ready to Verify the Future?&nbsp;</div>
+                        <div className="custom-scroll-text">Ready to Verify the Future?&nbsp;</div>
+                        <div className="custom-scroll-text">Ready to Verify the Future?&nbsp;</div>
+                    </div>
                 </div>
 
-                <div style={{ textAlign: 'center', padding: '48px 32px', marginBottom: 48, background: 'var(--gradient-card)', border: '1px solid var(--border-color)', borderRadius: 16 }}>
+                <div style={{ marginBottom: 56 }} className="fade-up delay-300">
+                    <h2 className="tracking-tight" style={{ fontSize: '2.5rem', fontWeight: 600, marginBottom: 28, color: 'var(--text-primary)' }}>
+                        Got Questions?<br/>We've Got Answers.
+                    </h2>
+                    <div style={{marginTop: 32}}>
+                    {faqs.map((item, i) => (
+                        <div key={i} className="fronsciers-faq-group">
+                            <button className="fronsciers-faq-btn" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
+                                <span>{item.q}</span>
+                                <div style={{width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative'}}>
+                                    <div style={{width: 16, height: 2, background: 'var(--text-primary)'}}></div>
+                                    <div style={{width: 2, height: 16, background: 'var(--text-primary)', position: 'absolute', transform: openFaq === i ? 'rotate(90deg)' : 'rotate(0deg)', opacity: openFaq === i ? 0 : 1, transition: 'all 0.3s'}}></div>
+                                </div>
+                            </button>
+                            <div className={`fronsciers-faq-content ${openFaq === i ? 'is-open' : ''}`}>
+                                <p className="text-muted-foreground">{item.a}</p>
+                            </div>
+                        </div>
+                    ))}
+                    </div>
+                </div>
+
+                <div className="fade-up delay-400" style={{ textAlign: 'center', padding: '48px 32px', marginBottom: 48, background: 'var(--gradient-card)', border: '1px solid var(--border-color)', borderRadius: 16 }}>
                     <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: 12 }}>Siap Melihat Datanya?</h2>
                     <p style={{ color: 'var(--text-secondary)', marginBottom: 28, fontSize: '1rem' }}>
                         Jelajahi Public Ledger atau verifikasi transaksi secara independen.

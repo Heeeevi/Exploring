@@ -1,318 +1,321 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowDown, ArrowUpRight, CircleDot, Sparkles } from 'lucide-react';
+import { ArrowRight, Sun, Moon } from 'lucide-react';
 
-const TOKENS = [
-    { id: 'cashflow', label: 'DONATION FLOW', kind: 'pill-tilt', x: 12, y: 26, rotate: -31, depth: 1.1 },
-    { id: 'yield', label: 'HASH PROOF', kind: 'pill', x: 34, y: 30, rotate: -5, depth: 1.3 },
-    { id: 'borefi', label: 'MERKLE ROOT', kind: 'pill', x: 56, y: 24, rotate: 0, depth: 1.5 },
-    { id: 'sme', label: 'PUBLIC LEDGER', kind: 'pill', x: 78, y: 18, rotate: 0, depth: 1.2 },
-    { id: 'asterisk', label: '*', kind: 'disc', x: 87, y: 30, rotate: 0, depth: 2.0 },
-    { id: 'down', label: '↓', kind: 'disc', x: 95, y: 30, rotate: 0, depth: 1.8 },
-    { id: 'dot-a', label: '', kind: 'dot', x: 94, y: 21, rotate: 0, depth: 1.1 },
-    { id: 'dot-b', label: '', kind: 'dot-half', x: 96, y: 10, rotate: 0, depth: 0.9 }
-];
-
-export default function Landing() {
-    const arenaRef = useRef(null);
-    const titleRef = useRef(null);
-    const descriptionRef = useRef(null);
-    const ctaRef = useRef(null);
-    const [tokens, setTokens] = useState(() => TOKENS);
-    const [arenaSize, setArenaSize] = useState({ width: 0, height: 0 });
-    const [pointer, setPointer] = useState({ x: 0, y: 0, inside: false });
-    const [protectedZones, setProtectedZones] = useState([]);
-    const [titleTop, setTitleTop] = useState(null);
-    const [draggingTokenId, setDraggingTokenId] = useState(null);
-    const [showThemeHint, setShowThemeHint] = useState(false);
-    const [theme, setTheme] = useState(() => {
-        const saved = localStorage.getItem('theme');
-        if (saved === 'light' || saved === 'dark') return saved;
-        return document.documentElement.getAttribute('data-theme') || 'dark';
-    });
+export default function Landing({ toggleTheme }) {
+    const [theme, setTheme] = useState(document.documentElement.getAttribute('data-theme') || 'light');
 
     useEffect(() => {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
-    }, [theme]);
-
-    useEffect(() => {
-        const seen = localStorage.getItem('landing_theme_hint_seen');
-        setShowThemeHint(!seen);
+        const obs = new MutationObserver(() => {
+            setTheme(document.documentElement.getAttribute('data-theme') || 'light');
+        });
+        obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        return () => obs.disconnect();
     }, []);
 
-    const handleThemeToggle = () => {
-        setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-        setShowThemeHint(false);
-        localStorage.setItem('landing_theme_hint_seen', '1');
-    };
-
+    // Canvas Rays Effect
     useEffect(() => {
-        const update = () => {
-            if (!arenaRef.current) return;
-            const arenaRect = arenaRef.current.getBoundingClientRect();
-            setArenaSize({ width: arenaRect.width, height: arenaRect.height });
+        const canvas = document.getElementById('rays-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let animationFrameId;
 
-            const refs = [titleRef, descriptionRef, ctaRef];
-            const zones = refs
-                .map((ref) => ref.current)
-                .filter(Boolean)
-                .map((node) => {
-                    const r = node.getBoundingClientRect();
-                    return {
-                        left: r.left - arenaRect.left,
-                        right: r.right - arenaRect.left,
-                        top: r.top - arenaRect.top,
-                        bottom: r.bottom - arenaRect.top
-                    };
-                });
-
-            setProtectedZones(zones);
-            if (zones[0]) {
-                setTitleTop(zones[0].top);
+        const drawRays = () => {
+            const width = canvas.width;
+            const height = canvas.height;
+            const cx = width / 2;
+            const cy = height / 2;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const time = Date.now() * 0.0005;
+            const numRays = 24;
+            
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(time * 0.1);
+            
+            for (let i = 0; i < numRays; i++) {
+                const angle = (i * Math.PI * 2) / numRays;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                
+                // create a subtle gradient for each ray
+                const gradient = ctx.createLinearGradient(0, 0, Math.cos(angle) * width, Math.sin(angle) * width);
+                gradient.addColorStop(0, 'rgba(59, 130, 246, 0.08)');
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                
+                ctx.fillStyle = gradient;
+                
+                ctx.arc(0, 0, width, angle, angle + 0.1);
+                ctx.lineTo(0, 0);
+                ctx.fill();
             }
+            ctx.restore();
+            
+            animationFrameId = requestAnimationFrame(drawRays);
         };
 
-        update();
-        const raf = requestAnimationFrame(update);
-        window.addEventListener('resize', update);
+        const handleResize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            drawRays();
+        };
+
+        window.addEventListener('resize', handleResize);
+        handleResize();
+
         return () => {
-            cancelAnimationFrame(raf);
-            window.removeEventListener('resize', update);
+            window.removeEventListener('resize', handleResize);
+            cancelAnimationFrame(animationFrameId);
         };
     }, []);
 
-    const handleMove = (event) => {
-        if (draggingTokenId) return;
-        const rect = event.currentTarget.getBoundingClientRect();
-        setPointer({
-            x: event.clientX - rect.left,
-            y: event.clientY - rect.top,
-            inside: true
-        });
-    };
-
-    const handleTokenPointerDown = (event, tokenId) => {
-        event.preventDefault();
-        event.stopPropagation();
-
-        const rect = arenaRef.current?.getBoundingClientRect();
-        if (!rect) return;
-
-        setPointer({
-            x: event.clientX - rect.left,
-            y: event.clientY - rect.top,
-            inside: true
-        });
-        setDraggingTokenId(tokenId);
-    };
+    const words = ["cheaper.", "trustless.", "immutable.", "verified.", "collaborative.", "global.", "better."];
+    const [activeWordIndex, setActiveWordIndex] = useState(0);
+    const listRef = useRef(null);
 
     useEffect(() => {
-        if (!draggingTokenId) return;
+        const handleScroll = () => {
+            if (!listRef.current) return;
+            const listItems = listRef.current.children;
+            // The sticky element is at top: 40vh, so we want the word closest to 40% of viewport height
+            const targetY = window.innerHeight * 0.4;
 
-        const handleWindowMove = (event) => {
-            const rect = arenaRef.current?.getBoundingClientRect();
-            if (!rect) return;
+            let closestIndex = 0;
+            let minDistance = Infinity;
 
-            const rawX = event.clientX - rect.left;
-            const rawY = event.clientY - rect.top;
-            const upperBound = titleTop ? Math.max(86, titleTop - 72) : rect.height * 0.42;
-            const margin = 24;
+            for (let i = 0; i < listItems.length; i++) {
+                const rect = listItems[i].getBoundingClientRect();
+                const itemCenter = rect.top + rect.height / 2;
+                const distance = Math.abs(targetY - itemCenter);
 
-            const clampX = Math.min(rect.width - margin, Math.max(margin, rawX));
-            const clampY = Math.min(upperBound, Math.max(margin, rawY));
-
-            setPointer({ x: clampX, y: clampY, inside: true });
-
-            setTokens((prev) => prev.map((token) => {
-                if (token.id !== draggingTokenId) return token;
-
-                const nextX = (clampX / rect.width) * 100;
-                const nextY = (clampY / rect.height) * 100;
-                const rotationDelta = ((clampX / rect.width) - 0.5) * 18 + ((clampY / rect.height) - 0.5) * 10;
-
-                return {
-                    ...token,
-                    x: nextX,
-                    y: nextY,
-                    rotate: token.rotate + rotationDelta * 0.02
-                };
-            }));
-        };
-
-        const handleWindowUp = () => setDraggingTokenId(null);
-
-        window.addEventListener('pointermove', handleWindowMove);
-        window.addEventListener('pointerup', handleWindowUp);
-        window.addEventListener('pointercancel', handleWindowUp);
-
-        return () => {
-            window.removeEventListener('pointermove', handleWindowMove);
-            window.removeEventListener('pointerup', handleWindowUp);
-            window.removeEventListener('pointercancel', handleWindowUp);
-        };
-    }, [draggingTokenId, titleTop]);
-
-    const tokenStyles = useMemo(() => {
-        return tokens.map((token) => {
-            if (!arenaSize.width || !arenaSize.height) {
-                return {
-                    transform: `translate(-50%, -50%) rotate(${token.rotate}deg)`
-                };
-            }
-
-            if (token.id === draggingTokenId) {
-                return {
-                    transform: `translate(-50%, -50%) rotate(${token.rotate}deg)`,
-                    zIndex: 12,
-                    cursor: 'grabbing'
-                };
-            }
-
-            const px = (token.x / 100) * arenaSize.width;
-            const py = (token.y / 100) * arenaSize.height;
-            const isInteractive = pointer.inside;
-            const dx = px - pointer.x;
-            const dy = py - pointer.y;
-            const distance = Math.max(Math.hypot(dx, dy), 1);
-            const repelRadius = 240;
-            const pull = isInteractive ? Math.max(0, 1 - distance / repelRadius) : 0;
-            const repelStrength = 28 * token.depth;
-
-            const tx = (dx / distance) * pull * repelStrength;
-            const ty = (dy / distance) * pull * repelStrength;
-
-            const driftX = isInteractive ? ((pointer.x / arenaSize.width) - 0.5) * 12 * token.depth : 0;
-            const driftY = isInteractive ? ((pointer.y / arenaSize.height) - 0.5) * 8 * token.depth : 0;
-
-            let nextX = px + tx + driftX;
-            let nextY = py + ty + driftY;
-
-            protectedZones.forEach((zone) => {
-                const pad = 22;
-                const box = {
-                    left: zone.left - pad,
-                    right: zone.right + pad,
-                    top: zone.top - pad,
-                    bottom: zone.bottom + pad
-                };
-
-                if (nextX > box.left && nextX < box.right && nextY > box.top && nextY < box.bottom) {
-                    const distLeft = Math.abs(nextX - box.left);
-                    const distRight = Math.abs(box.right - nextX);
-                    const distTop = Math.abs(nextY - box.top);
-                    const distBottom = Math.abs(box.bottom - nextY);
-                    const nearest = Math.min(distLeft, distRight, distTop, distBottom);
-
-                    if (nearest === distLeft) nextX = box.left - 8;
-                    else if (nearest === distRight) nextX = box.right + 8;
-                    else if (nearest === distTop) nextY = box.top - 8;
-                    else nextY = box.bottom + 8;
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestIndex = i;
                 }
-            });
+            }
+            setActiveWordIndex(closestIndex);
+        };
 
-            const margin = 24;
-            const upperBound = titleTop ? Math.max(86, titleTop - 72) : arenaSize.height * 0.42;
-            nextX = Math.min(arenaSize.width - margin, Math.max(margin, nextX));
-            nextY = Math.min(upperBound, Math.max(margin, nextY));
+        window.addEventListener('scroll', handleScroll);
+        // Initial check
+        handleScroll();
 
-            const finalTx = nextX - px;
-            const finalTy = nextY - py;
-            const rotationDelta = isInteractive ? (finalTx * 0.02) + (finalTy * 0.015) : 0;
-            const finalRotation = token.rotate + rotationDelta;
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
-            return {
-                transform: `translate(-50%, -50%) translate(${finalTx}px, ${finalTy}px) rotate(${finalRotation}deg)`,
-                cursor: 'grab'
-            };
-        });
-    }, [arenaSize.height, arenaSize.width, pointer.inside, pointer.x, pointer.y, protectedZones, titleTop, tokens, draggingTokenId]);
+    const [openFaq, setOpenFaq] = useState(null);
+
+    const faqs = [
+        {
+            q: "Bagaimana cara kerja verifikasi FundNProof?",
+            a: "Semua transaksi yang dicatat akan di-hash secara kriptografis dan dikelompokkan ke dalam Merkle Tree. Root hash dari pohon ini kemudian dipublikasikan ke jaringan Solana, memastikan bahwa data historis tidak dapat diubah tanpa terdeteksi."
+        },
+        {
+            q: "Apakah saya harus mengerti Crypto/Blockchain?",
+            a: "Tidak. FundNProof dirancang seperti ERP (Enterprise Resource Planning) pada umumnya. Operator Anda hanya perlu melakukan input data seperti biasa, dan sistem kami yang akan menangani kompleksitas blockchain di latar belakang."
+        },
+        {
+            q: "Kenapa menggunakan Solana?",
+            a: "Solana menawarkan kombinasi kecepatan (throughput tinggi) dan biaya transaksi yang sangat rendah, sehingga ideal untuk memverifikasi ribuan transaksi mikro (seperti donasi atau operasional harian) tanpa membebani biaya operasional."
+        }
+    ];
 
     return (
-        <div className="landing-page landing-v2">
-            <nav className="landing-v2-nav">
-                <div className="landing-v2-brand">FUNDNPROOF</div>
-                <div className="landing-v2-actions">
-                    <Link to="/public" className="btn btn-ghost btn-sm">Public Ledger</Link>
-                    <Link to="/login" className="btn btn-secondary btn-sm">Sign In</Link>
+        <div style={{backgroundColor: 'var(--bg-primary)', minHeight: '100vh', position: 'relative'}}>
+            {/* Floating Navbar */}
+            <div className="fronsciers-nav-wrapper">
+                <nav className="fronsciers-nav">
+                    <Link to="/" className="landing-v2-brand" style={{display: 'flex', alignItems: 'center', marginLeft: 16, fontWeight: 800, fontSize: '1.3rem', color: 'var(--text-primary)', textDecoration: 'none'}}>
+                        <img src="/FNP Logo.png" alt="FundNProof logo" style={{width:30, height:30, objectFit:'contain', marginRight: 8, background: 'var(--bg-card)', borderRadius: 10, padding: 3, border: '1px solid var(--border-color)'}} />
+                        FUNDNPROOF
+                    </Link>
+                    <div className="landing-v2-actions" style={{display: 'flex', gap: 16, alignItems: 'center', marginRight: 16}}>
+                        <Link to="/public" className="btn btn-ghost btn-sm text-muted-foreground">Public Ledger</Link>
+                        <button type="button" className="btn btn-ghost btn-sm theme-toggle text-muted-foreground" onClick={toggleTheme}>
+                            {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+                        </button>
+                        <Link to="/login" className="btn btn-secondary btn-sm" style={{borderRadius: 9999}}>Sign In</Link>
+                    </div>
+                </nav>
+            </div>
+
+            {/* Hero Section */}
+            <section style={{minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden'}}>
+                <div style={{position: 'absolute', inset: 0, zIndex: 0}}>
+                    <canvas id="rays-canvas" style={{width: '100%', height: '100%', opacity: 0.5, pointerEvents: 'none'}}></canvas>
                 </div>
-            </nav>
-
-            <section
-                ref={arenaRef}
-                className="landing-v2-arena"
-                onMouseMove={handleMove}
-                onMouseLeave={() => setPointer((prev) => ({ ...prev, inside: false }))}
-            >
-                <div className="landing-v2-kicker">
-                    <span>POWERING PUBLIC TRUST</span>
-                    <ArrowUpRight size={18} />
-                    <span>Where did my money go? Turn it into proof.</span>
-                </div>
-
-                <div className="landing-v2-mode-stack">
-                    {showThemeHint && (
-                        <div className="landing-v2-mode-hint" role="status">
-                            Click me • Change mode
-                        </div>
-                    )}
-                    <button
-                        type="button"
-                        className={`landing-v2-mode-toggle ${showThemeHint ? 'is-pulsing' : ''}`}
-                        onClick={handleThemeToggle}
-                        aria-label="Toggle dark and light mode"
-                        title="Toggle dark and light mode"
-                    >
-                        <span className="v2-half-dot" />
-                    </button>
-                </div>
-
-                <div
-                    className={`landing-v2-cursor ${pointer.inside ? 'is-visible' : ''}`}
-                    style={{ left: `${pointer.x}px`, top: `${pointer.y}px` }}
-                />
-
-                <div className="landing-v2-orbit">
-                    {tokens.map((token, index) => (
-                        <div
-                            key={token.id}
-                            className={`physics-body ${draggingTokenId === token.id ? 'is-dragging' : ''}`}
-                            style={{ left: `${token.x}%`, top: `${token.y}%`, ...tokenStyles[index] }}
-                            onPointerDown={(event) => handleTokenPointerDown(event, token.id)}
-                        >
-                            <div className={`v2-token ${token.kind}`}>
-                                {token.id === 'dot-a' && <CircleDot size={14} />}
-                                {token.id === 'dot-b' && <span className="v2-half-dot" />}
-                                {!token.id.startsWith('dot-') && token.label}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="landing-v2-copy">
-                    <h1 ref={titleRef} className="landing-v2-title">
-                        <span>FUND</span>
-                        <span className="landing-v2-title-n">N</span>
-                        <span>PROOF</span>
+                
+                <div style={{position: 'relative', zIndex: 10, maxWidth: 900, margin: '0 auto', textAlign: 'center', padding: '0 20px'}}>
+                    <p className="uppercase-kicker text-muted-foreground tracking-widest fade-up" style={{marginBottom: 16}}>
+                        Blockchain-Powered Transparency
+                    </p>
+                    <h1 className="tracking-tight fade-up delay-100" style={{fontSize: '4rem', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.1}}>
+                        Open, Verifiable, On-Chain
                     </h1>
-                    <p ref={descriptionRef}>
-                        Trust infrastructure for public money in Indonesia. Built for funds, donors,
-                        and programs that need transparency people can verify, not just trust.
+                    <p className="text-muted-foreground fade-up delay-200" style={{fontSize: '1.125rem', marginTop: 24, maxWidth: 700, margin: '24px auto 0', lineHeight: 1.6}}>
+                        Trust infrastructure for public money in Indonesia. Built for funds, donors, and programs that need transparency people can verify, not just trust.
                     </p>
-                    <p className="landing-v2-about-link">
-                        <Link to="/about">Read the full story and approach →</Link>
-                    </p>
-                </div>
-
-                <div className="landing-v2-ctas" ref={ctaRef}>
-                    <Link to="/public" className="btn btn-primary">
-                        <Sparkles size={18} /> Verify Public Ledger
-                    </Link>
-                    <Link to="/login" className="btn btn-primary">
-                        <ArrowDown size={18} /> Enter Dashboard
-                    </Link>
+                    
+                    <div className="fade-up delay-300" style={{marginTop: 40, display: 'flex', justifyContent: 'center'}}>
+                        <Link to="/public" className="learn-more-btn" style={{textDecoration: 'none'}}>
+                            <span className="circle"></span>
+                            <ArrowRight className="icon-default" />
+                            <ArrowRight className="icon-hover" />
+                            <span className="button-text" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', paddingLeft: '2.5rem'}}>
+                                Verify Public Ledger
+                            </span>
+                        </Link>
+                    </div>
                 </div>
             </section>
+
+            {/* Overview Section */}
+            <div style={{maxWidth: 900, margin: '0 auto', padding: '0 20px', position: 'relative', zIndex: 10}}>
+                <div className="h-px w-full" style={{background: 'var(--border-color)', marginBottom: '4rem'}}></div>
+                <div style={{padding: '3rem 0 6rem'}}>
+                    <p className="text-muted-foreground fade-up" style={{fontSize: '1.25rem', textAlign: 'center', lineHeight: 1.6}}>
+                        Every year, more than Rp40 trillion in donations, zakat, and social funds flow through systems that people cannot independently verify. FundNProof answers "Where did my money actually go?" with verifiable proof, not promises.
+                    </p>
+                    <div style={{textAlign: 'center', marginTop: 32}} className="fade-up delay-100">
+                        <Link to="/about" style={{color: 'var(--text-accent)', textDecoration: 'none', fontWeight: 500}}>Read the full story and approach →</Link>
+                    </div>
+                </div>
+            </div>
+
+            {/* Features Block */}
+            <section className="fronsciers-features-bg fade-up" style={{marginBottom: '2rem', position: 'relative', zIndex: 10}}>
+                <div style={{padding: '6rem 2rem', maxWidth: '80rem', margin: '0 auto'}}>
+                    <div style={{display: 'flex', flexWrap: 'wrap', gap: '4rem', justifyContent: 'space-between', alignItems: 'flex-start'}}>
+                        <div style={{flex: '1 1 400px', position: 'sticky', top: 120}}>
+                            <h2 className="tracking-tight" style={{fontSize: '2.5rem', fontWeight: 600, marginBottom: 16}}>How FundNProof Works</h2>
+                            <p style={{fontSize: '1.25rem', opacity: 0.8, lineHeight: 1.6}}>
+                                Experience the future of public fund management with our comprehensive platform designed for organizations who demand transparency.
+                            </p>
+                        </div>
+                        
+                        <div style={{flex: '1 1 500px', display: 'flex', flexDirection: 'column', gap: '3rem'}}>
+                            <div style={{display: 'flex', gap: '1.5rem', alignItems: 'flex-start'}}>
+                                <div style={{fontSize: '2.5rem', lineHeight: 1}}>⚡️</div>
+                                <div style={{flex: 1}}>
+                                    <h3 className="tracking-tight" style={{fontSize: '1.25rem', fontWeight: 600, marginBottom: 8}}>Familiar Dashboard</h3>
+                                    <p style={{opacity: 0.8}}>Transactions are recorded in a familiar operational dashboard without needing crypto knowledge.</p>
+                                    <div style={{height: 1, background: 'rgba(255,255,255,0.2)', marginTop: 24}}></div>
+                                </div>
+                            </div>
+                            <div style={{display: 'flex', gap: '1.5rem', alignItems: 'flex-start'}}>
+                                <div style={{fontSize: '2.5rem', lineHeight: 1}}>🔒</div>
+                                <div style={{flex: 1}}>
+                                    <h3 className="tracking-tight" style={{fontSize: '1.25rem', fontWeight: 600, marginBottom: 8}}>Cryptographic Proof</h3>
+                                    <p style={{opacity: 0.8}}>Each record is hashed and linked, making silent edits detectable.</p>
+                                    <div style={{height: 1, background: 'rgba(255,255,255,0.2)', marginTop: 24}}></div>
+                                </div>
+                            </div>
+                            <div style={{display: 'flex', gap: '1.5rem', alignItems: 'flex-start'}}>
+                                <div style={{fontSize: '2.5rem', lineHeight: 1}}>🌍</div>
+                                <div style={{flex: 1}}>
+                                    <h3 className="tracking-tight" style={{fontSize: '1.25rem', fontWeight: 600, marginBottom: 8}}>Public Verification</h3>
+                                    <p style={{opacity: 0.8}}>Batches are anchored to Solana. Public verification can be done without trusting internal claims.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Sticky Scroll Text Section */}
+            <div style={{backgroundColor: 'var(--bg-primary)', zIndex: 30, position: 'relative', paddingBottom: '3rem'}}>
+                <div style={{width: '100%', paddingTop: '4rem', marginBottom: '2rem', paddingLeft: '1rem', paddingRight: '1rem'}}>
+                    <h1 style={{textAlign: 'center', fontWeight: 600, color: 'var(--text-primary)', fontSize: '3rem'}} className="tracking-tight md:text-6xl">
+                        With FundNProof,
+                    </h1>
+                </div>
+                <main style={{width: '100%', display: 'flex', justifyContent: 'center'}}>
+                    <section style={{display: 'flex', alignItems: 'flex-start', lineHeight: 1.25, width: '90%', justifyContent: 'center', paddingBottom: '4rem'}}>
+                        <h2 className="tracking-tight" style={{fontSize: '2rem', position: 'sticky', top: '40vh', margin: 0, display: 'inline-block', height: 'fit-content', fontWeight: 600}}>
+                            <span style={{color: 'var(--text-primary)', marginRight: '0.5rem', whiteSpace: 'nowrap'}}>
+                                transparency is&nbsp;
+                            </span>
+                        </h2>
+                        <ul ref={listRef} style={{fontWeight: 600, padding: 0, margin: 0, listStyleType: 'none'}}>
+                            {words.map((word, i) => (
+                                <li key={i} className="tracking-tight" style={{
+                                    fontSize: '2rem', 
+                                    fontWeight: 600, 
+                                    opacity: activeWordIndex === i ? 1 : 0.2, 
+                                    transition: 'opacity 0.3s ease',
+                                    color: 'var(--text-primary)',
+                                    marginBottom: i === words.length - 1 ? 0 : '1.5rem'
+                                }}>
+                                    {word}
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+                </main>
+            </div>
+
+            {/* Marquee Section */}
+            <section style={{margin: '2rem 0 6rem 0', overflow: 'hidden'}} className="fade-up">
+                <div className="custom-scroll-text-container">
+                    <div className="custom-scroll-text">Ready to Verify the Future?&nbsp;</div>
+                    <div className="custom-scroll-text">Ready to Verify the Future?&nbsp;</div>
+                    <div className="custom-scroll-text">Ready to Verify the Future?&nbsp;</div>
+                </div>
+            </section>
+
+            {/* FAQ Section */}
+            <section style={{paddingBottom: '8rem', maxWidth: '80rem', margin: '0 auto', padding: '0 2rem'}} className="fade-up">
+                <div className="h-px w-full" style={{background: 'var(--border-color)', marginBottom: '4rem'}}></div>
+                <div style={{display: 'flex', flexWrap: 'wrap', gap: '4rem', alignItems: 'flex-start'}}>
+                    <div style={{flex: '1 1 400px', position: 'sticky', top: 120}}>
+                        <h2 className="tracking-tight" style={{fontSize: '2.5rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 24}}>
+                            Got Questions?<br/>We've Got Answers.
+                        </h2>
+                        <p className="text-muted-foreground" style={{fontSize: '1.125rem', lineHeight: 1.6}}>
+                            Find answers to common questions about FundNProof and how our decentralized transparency platform revolutionizes public trust.
+                        </p>
+                    </div>
+                    
+                    <div style={{flex: '1 1 500px'}}>
+                        {faqs.map((item, i) => (
+                            <div key={i} className="fronsciers-faq-group">
+                                <button className="fronsciers-faq-btn" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
+                                    <span>{item.q}</span>
+                                    <div style={{width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0}}>
+                                        <div style={{width: 16, height: 2, background: 'var(--text-primary)'}}></div>
+                                        <div style={{width: 2, height: 16, background: 'var(--text-primary)', position: 'absolute', transform: openFaq === i ? 'rotate(90deg)' : 'rotate(0deg)', opacity: openFaq === i ? 0 : 1, transition: 'all 0.3s'}}></div>
+                                    </div>
+                                </button>
+                                <div className={`fronsciers-faq-content ${openFaq === i ? 'is-open' : ''}`}>
+                                    <p className="text-muted-foreground" style={{paddingRight: '2rem', lineHeight: 1.6}}>{item.a}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Footer */}
+            <footer style={{paddingBottom: '2rem', marginTop: '4rem'}}>
+                <div style={{backgroundColor: 'var(--bg-card)', borderRadius: '1.5rem 1.5rem 0 0', overflow: 'hidden', margin: '0 1rem', padding: '4rem 1.5rem', textAlign: 'center'}}>
+                    <div style={{maxWidth: '48rem', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem'}}>
+                        <img src="/FNP Logo.png" alt="FundNProof Logo" style={{width: '3rem', height: '3rem', objectFit: 'contain', background: 'var(--bg-primary)', padding: '0.25rem', borderRadius: '0.5rem'}} />
+                        <h3 className="tracking-tight" style={{fontSize: '1.5rem', fontWeight: 600}}>
+                            Start Verifying with FundNProof
+                        </h3>
+                        <p className="text-muted-foreground" style={{fontSize: '1.125rem'}}>
+                            Join the movement towards absolute transparency in public fund management.
+                        </p>
+                        <div style={{marginTop: '2rem'}}>
+                            <Link to="/public" className="btn btn-primary" style={{borderRadius: 9999, padding: '0.75rem 2rem'}}>
+                                Buka Public Ledger
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 }

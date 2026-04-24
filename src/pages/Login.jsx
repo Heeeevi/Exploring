@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { LogIn, UserPlus, Sun, Moon } from 'lucide-react';
+import { LogIn, UserPlus, Sun, Moon, Shield } from 'lucide-react';
 import { useTheme } from '../useTheme';
 
 export default function Login() {

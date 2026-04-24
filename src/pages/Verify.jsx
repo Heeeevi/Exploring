@@ -120,30 +120,23 @@ export default function Verify() {
 
     return (
         <div className="public-layout">
-            <nav className="public-nav">
-                <div className="landing-logo">
-                    <img src="/FNP Logo.png" alt="FundNProof logo" className="logo-icon" />
-                    <span>FundNProof</span>
-                    <span className="badge badge-chain" style={{ marginLeft: 8 }}>Verification</span>
-                </div>
-                <div className="public-nav-actions">
-                    <button
-                        className="theme-toggle"
-                        onClick={toggleTheme}
-                        type="button"
-                        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-                        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-                    >
-                        {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-                    </button>
-                    <Link to="/public" className="btn btn-secondary btn-sm">
-                        <ArrowLeft size={14} /> Back to Ledger
+            <div className="fronsciers-nav-wrapper">
+                <nav className="fronsciers-nav">
+                    <Link to="/" className="landing-v2-brand" style={{ display: 'flex', alignItems: 'center', marginLeft: 16, fontWeight: 800, fontSize: '1.3rem', color: 'var(--text-primary)', textDecoration: 'none' }}>
+                        <img src="/FNP Logo.png" alt="FundNProof logo" style={{ width: 30, height: 30, objectFit: 'contain', marginRight: 8, background: 'var(--bg-card)', borderRadius: 10, padding: 3, border: '1px solid var(--border-color)' }} />
+                        FUNDNPROOF
                     </Link>
-                </div>
-            </nav>
+                    <div className="landing-v2-actions" style={{ display: 'flex', gap: 16, alignItems: 'center', marginRight: 16 }}>
+                        <Link to="/public" className="btn btn-ghost btn-sm text-muted-foreground">Public Ledger</Link>
+                        <button type="button" className="btn btn-ghost btn-sm theme-toggle text-muted-foreground" onClick={toggleTheme}>
+                            {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+                        </button>
+                    </div>
+                </nav>
+            </div>
 
             <div className="public-body">
-                <div className="verify-box animate-in">
+                <div className="verify-box fade-up">
                     <Shield size={48} style={{ color: 'var(--accent-purple)', marginBottom: 16 }} />
                     <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: 8 }}>Verify a Transaction</h2>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
@@ -395,7 +388,7 @@ export default function Verify() {
                 </div>
 
                 {/* Chain Integrity */}
-                <div className="card animate-in" style={{ maxWidth: 700, margin: '32px auto' }}>
+                <div className="card fade-up delay-200" style={{ maxWidth: 700, margin: '32px auto' }}>
                     <div className="card-header">
                         <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <Shield size={18} />
@@ -425,7 +418,7 @@ export default function Verify() {
 
                 {/* Solana Anchors */}
                 {anchorStatus && anchorStatus.totalAnchors > 0 && (
-                    <div className="card animate-in" style={{ maxWidth: 700, margin: '32px auto' }}>
+                    <div className="card fade-up delay-300" style={{ maxWidth: 700, margin: '32px auto' }}>
                         <div className="card-header">
                             <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <Anchor size={18} style={{ color: 'var(--accent-purple)' }} />

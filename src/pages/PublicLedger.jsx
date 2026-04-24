@@ -66,41 +66,32 @@ export default function PublicLedger() {
 
     return (
         <div className="public-layout">
-            <nav className="public-nav">
-                <div className="landing-logo">
-                    <img src="/FNP Logo.png" alt="FundNProof logo" className="logo-icon" />
-                    <span>FundNProof</span>
-                    <span className="badge badge-chain" style={{ marginLeft: 8 }}>Public Ledger</span>
-                </div>
-                <div className="public-nav-actions">
-                    <button
-                        className="theme-toggle"
-                        onClick={toggleTheme}
-                        type="button"
-                        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-                        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-                    >
-                        {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-                    </button>
-                    <Link to="/public/how-it-works" className="btn btn-ghost btn-sm">
-                        <HelpCircle size={14} /> Cara Kerja
+            <div className="fronsciers-nav-wrapper">
+                <nav className="fronsciers-nav">
+                    <Link to="/" className="landing-v2-brand" style={{display: 'flex', alignItems: 'center', marginLeft: 16, fontWeight: 800, fontSize: '1.3rem', color: 'var(--text-primary)', textDecoration: 'none'}}>
+                        <img src="/FNP Logo.png" alt="FundNProof logo" style={{width:30, height:30, objectFit:'contain', marginRight: 8, background: 'var(--bg-card)', borderRadius: 10, padding: 3, border: '1px solid var(--border-color)'}} />
+                        FUNDNPROOF
                     </Link>
-                    <Link to="/public/verify" className="btn btn-secondary btn-sm">
-                        <Shield size={14} /> Verify Transaction
-                    </Link>
-                    <Link to="/login" className="btn btn-ghost btn-sm">Staff Login</Link>
-                </div>
-            </nav>
+                    <div className="landing-v2-actions" style={{display: 'flex', gap: 16, alignItems: 'center', marginRight: 16}}>
+                        <Link to="/public/how-it-works" className="btn btn-ghost btn-sm text-muted-foreground">Cara Kerja</Link>
+                        <Link to="/public/verify" className="btn btn-ghost btn-sm text-muted-foreground">Verify Transaction</Link>
+                        <button type="button" className="btn btn-ghost btn-sm theme-toggle text-muted-foreground" onClick={toggleTheme}>
+                            {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+                        </button>
+                        <Link to="/login" className="btn btn-secondary btn-sm" style={{borderRadius: 9999}}>Staff Login</Link>
+                    </div>
+                </nav>
+            </div>
 
             <div className="public-body">
-                <div className="public-hero">
+                <div className="public-hero fade-up">
                     <h1>Public Financial Ledger</h1>
                     <p>Asked "Where did my money go?" Verify it here directly with cryptographic proof.</p>
                 </div>
 
                 {/* Chain Status */}
                 {stats?.chainIntegrity && (
-                    <div className={`chain-status ${stats.chainIntegrity.valid ? 'valid' : 'invalid'}`}>
+                    <div className={`chain-status fade-up delay-100 ${stats.chainIntegrity.valid ? 'valid' : 'invalid'}`}>
                         <span className="status-dot"></span>
                         <span>
                             Chain Integrity: {stats.chainIntegrity.valid ? 'Verified' : 'Broken'} — {stats.chainIntegrity.totalEntries} entries,
@@ -111,7 +102,7 @@ export default function PublicLedger() {
 
                 {/* Solana Proof Banner */}
                 {solana && solana.totalAnchors > 0 && (
-                    <div className="public-banner public-banner-purple">
+                    <div className="public-banner public-banner-purple fade-up delay-100">
                         <Anchor size={20} className="public-banner-icon" />
                         <div className="public-banner-content">
                             <div className="public-banner-title">
@@ -133,19 +124,19 @@ export default function PublicLedger() {
                 {/* Stats */}
                 {stats && (
                     <div className="stats-grid" style={{ marginBottom: 32 }}>
-                        <div className="stat-card income animate-in">
+                        <div className="stat-card income fade-up delay-200">
                             <div className="stat-label">Total Income</div>
                             <div className="stat-value income">{formatUSD(stats.totalIncome)}</div>
                         </div>
-                        <div className="stat-card expense animate-in">
+                        <div className="stat-card expense fade-up delay-200">
                             <div className="stat-label">Total Expenses</div>
                             <div className="stat-value expense">{formatUSD(stats.totalExpense)}</div>
                         </div>
-                        <div className="stat-card animate-in">
+                        <div className="stat-card fade-up delay-300">
                             <div className="stat-label">Net Balance</div>
                             <div className="stat-value accent">{formatUSD(stats.netBalance)}</div>
                         </div>
-                        <div className="stat-card animate-in">
+                        <div className="stat-card fade-up delay-300">
                             <div className="stat-label">Ledger Entries</div>
                             <div className="stat-value accent">{stats.totalEntries}</div>
                             <div className="stat-sub">{stats.programCount} programs, {stats.donorCount} donors</div>
@@ -154,7 +145,7 @@ export default function PublicLedger() {
                 )}
 
                 {/* Search & Export */}
-                <div className="public-toolbar">
+                <div className="public-toolbar fade-up delay-400">
                     <div className="search-bar">
                         <Search size={16} style={{ color: 'var(--text-muted)' }} />
                         <input placeholder="Search transactions, hashes, categories..." onChange={e => handleSearch(e.target.value)} />
@@ -170,7 +161,7 @@ export default function PublicLedger() {
                 </div>
 
                 {/* Ledger Table */}
-                <div className="card">
+                <div className="card fade-up delay-400">
                     <div className="table-container">
                         <table>
                             <thead>
