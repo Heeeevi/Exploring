@@ -110,12 +110,10 @@ export const api = {
     getActivities: (page = 1, limit = 50, entityType = '') => request(`/activity?page=${page}&limit=${limit}${entityType ? '&entity_type=' + entityType : ''}`),
     getActivityStats: () => request('/activity/stats'),
 
-    // Bank Reconciliation (factual bank-vs-ledger checks)
+    // Bank Reconciliation (manual statement import + ledger matching)
     reconciliationAccounts: () => request('/reconciliation/accounts'),
-    reconciliationProviders: () => request('/reconciliation/providers'),
     reconciliationCreateAccount: (data) => request('/reconciliation/accounts', { method: 'POST', body: JSON.stringify(data) }),
     reconciliationImport: (data) => request('/reconciliation/import', { method: 'POST', body: JSON.stringify(data) }),
-    reconciliationSync: (data) => request('/reconciliation/sync', { method: 'POST', body: JSON.stringify(data) }),
     reconciliationRun: (data) => request('/reconciliation/run', { method: 'POST', body: JSON.stringify(data) }),
     reconciliationLocks: () => request('/reconciliation/locks'),
     reconciliationReleaseLock: (id) => request(`/reconciliation/locks/${id}/release`, { method: 'POST' }),

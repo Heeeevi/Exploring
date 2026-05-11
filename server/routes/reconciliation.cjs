@@ -8,7 +8,6 @@ const {
     runReconciliation,
     getReconciliationStatus,
 } = require('../reconciliation-service.cjs');
-const { fetchEntriesForAccount, listSupportedProviders } = require('../bank-connectors/index.cjs');
 
 const router = express.Router();
 
@@ -68,10 +67,7 @@ router.post('/accounts', authMiddleware, (req, res) => {
     res.status(201).json(created);
 });
 
-// GET /api/reconciliation/providers
-router.get('/providers', authMiddleware, (req, res) => {
-    res.json({ providers: listSupportedProviders() });
-});
+
 
 // POST /api/reconciliation/import
 router.post('/import', authMiddleware, (req, res) => {
@@ -93,46 +89,7 @@ router.post('/import', authMiddleware, (req, res) => {
     res.status(201).json({ imported: result.imported, skipped: result.skipped, bank_account_id });
 });
 
-// POST /api/reconciliation/sync
-router.post('/sync', authMiddleware, async (req, res) => {
-    const { bank_account_id, days = 7 } = req.body || {};
-    if (!bank_account_id) return res.status(400).json({ error: 'bank_account_id is required' });
 
-    const account = db.prepare('SELECT * FROM bank_accounts WHERE id = ? AND is_active = 1').get(bank_account_id);
-    if (!account) return res.status(404).json({ error: 'Bank account not found' });
-
-    const to = new Date().toISOString().slice(0, 10);
-    const from = dateDaysAgo(days);
-    const pulled = await fetchEntriesForAccount(account, { from, to });
-
-    const imported = importStatementEntries({
-        actor: req.user,
-        bankAccountId: bank_account_id,
-        entries: pulled.entries,
-        source: `sync:${pulled.provider}`,
-        dedupe: true,
-    });
-
-    appendAuditEvent({
-        actorId: req.user.id,
-        actorName: req.user.name,
-        action: 'sync',
-        entityType: 'bank_account',
-        entityId: bank_account_id,
-        details: `Synced ${imported.imported} entries from provider ${pulled.provider}`,
-        after: { from, to, provider: pulled.provider, imported: imported.imported, skipped: imported.skipped }
-    });
-
-    res.json({
-        bank_account_id,
-        provider: pulled.provider,
-        fetched: pulled.entries.length,
-        imported: imported.imported,
-        skipped: imported.skipped,
-        from,
-        to,
-    });
-});
 
 // POST /api/reconciliation/run
 router.post('/run', authMiddleware, (req, res) => {

@@ -24,15 +24,11 @@ export default function Finance() {
     const [searchTerm, setSearchTerm] = useState('');
     const [reconciliation, setReconciliation] = useState(null);
     const [recAccounts, setRecAccounts] = useState([]);
-    const [recProviders, setRecProviders] = useState([]);
     const [recLocks, setRecLocks] = useState([]);
     const [recBankName, setRecBankName] = useState('');
     const [recAccountName, setRecAccountName] = useState('Main Operational Account');
     const [recMaskedNumber, setRecMaskedNumber] = useState('***1234');
-    const [recProvider, setRecProvider] = useState('manual');
     const [selectedRecAccountId, setSelectedRecAccountId] = useState('');
-    const [syncDays, setSyncDays] = useState(7);
-    const [syncing, setSyncing] = useState(false);
     const [statementInput, setStatementInput] = useState('');
     const [reconcilePeriod, setReconcilePeriod] = useState(() => {
         const now = new Date();
@@ -52,16 +48,14 @@ export default function Finance() {
             api.getPrograms(),
             api.reconciliationStatus().catch(() => null),
             api.reconciliationAccounts().catch(() => ({ accounts: [] })),
-            api.reconciliationProviders().catch(() => ({ providers: [] })),
             api.reconciliationLocks().catch(() => ({ locks: [] })),
         ])
-            .then(([txData, d, p, recStatus, recAcc, recProv, recLockResp]) => {
+            .then(([txData, d, p, recStatus, recAcc, recLockResp]) => {
                 setTransactions(txData.transactions);
                 setTotal(txData.total);
                 setDonors(d);
                 setPrograms(p);
                 setReconciliation(recStatus);
-                setRecProviders(recProv.providers || []);
                 setRecLocks(recLockResp.locks || []);
                 const accounts = recAcc.accounts || [];
                 setRecAccounts(accounts);
@@ -130,11 +124,9 @@ export default function Finance() {
                 name: recAccountName.trim(),
                 bank_name: recBankName.trim() || null,
                 account_number_masked: recMaskedNumber.trim() || null,
-                currency: 'USD',
-                provider: recProvider,
-                provider_config: recProvider === 'demo-feed' ? { referencePrefix: 'DEMO' } : null,
+                currency: 'IDR',
             });
-            showToast('success', 'Bank account added for factual reconciliation');
+            showToast('success', 'Bank account added for reconciliation');
             setRecBankName('');
             setRecMaskedNumber('***1234');
             await load();
@@ -182,22 +174,7 @@ export default function Finance() {
         }
     };
 
-    const handleSyncFromProvider = async () => {
-        try {
-            if (!selectedRecAccountId) throw new Error('Select bank account first');
-            setSyncing(true);
-            const result = await api.reconciliationSync({
-                bank_account_id: selectedRecAccountId,
-                days: Number(syncDays || 7),
-            });
-            showToast('success', `Synced ${result.imported} entries from ${result.provider}`);
-            await load();
-        } catch (err) {
-            showToast('error', err.message);
-        } finally {
-            setSyncing(false);
-        }
-    };
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -352,7 +329,7 @@ export default function Finance() {
                                 <div className="form-row">
                                     <div className="form-group" style={{ marginBottom: 4 }}>
                                         <label className="form-label">Bank Account Label</label>
-                                        <input className="form-input" value={recAccountName} onChange={(e) => setRecAccountName(e.target.value)} placeholder="Main Operational Account" />
+                                        <input className="form-input" value={recAccountName} onChange={(e) => setRecAccountName(e.target.value)} placeholder="Rekening Operasional Utama" />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 4 }}>
                                         <label className="form-label">Bank Name</label>
@@ -364,14 +341,6 @@ export default function Finance() {
                                         <label className="form-label">Account Number (Masked)</label>
                                         <input className="form-input" value={recMaskedNumber} onChange={(e) => setRecMaskedNumber(e.target.value)} placeholder="***1234" />
                                     </div>
-                                    <div className="form-group" style={{ marginBottom: 4 }}>
-                                        <label className="form-label">Provider</label>
-                                        <select className="form-select" value={recProvider} onChange={(e) => setRecProvider(e.target.value)}>
-                                            {(recProviders.length ? recProviders : [{ key: 'manual', name: 'Manual Upload' }, { key: 'demo-feed', name: 'Demo Feed (Mock)' }]).map((p) => (
-                                                <option key={p.key} value={p.key}>{p.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
                                     <div className="form-group" style={{ marginBottom: 4, display: 'flex', alignItems: 'end' }}>
                                         <button type="button" className="btn btn-secondary btn-sm" onClick={handleCreateBankAccount}>Save Account</button>
                                     </div>
@@ -380,36 +349,22 @@ export default function Finance() {
                         </div>
 
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label className="form-label">Statement Import (JSON array or CSV)</label>
+                            <label className="form-label">Import Bank Statement (JSON or CSV)</label>
+                            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>Paste your bank statement data below. Export from your internet banking as CSV, or format as JSON array.</p>
                             <textarea
                                 className="form-textarea"
                                 style={{ minHeight: 120, fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}
                                 value={statementInput}
                                 onChange={(e) => setStatementInput(e.target.value)}
-                                placeholder={'JSON: [{"entry_date":"2026-04-15","amount":1500,"direction":"credit","description":"Donor transfer","external_ref":"TRX-001"}]\n\nCSV: entry_date,amount,direction,description,external_ref,running_balance'}
+                                placeholder={'JSON: [{"entry_date":"2026-04-15","amount":1500000,"direction":"credit","description":"Transfer donasi","external_ref":"TRX-001"}]\n\nCSV: entry_date,amount,direction,description,external_ref,running_balance'}
                             />
                             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>
                                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                    Required fields: entry_date, amount, direction(credit/debit)
+                                    Required: entry_date, amount, direction (credit/debit). Optional: description, external_ref, running_balance
                                 </span>
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                                    <button type="button" className="btn btn-secondary btn-sm" onClick={handleImportStatement}>
-                                        <FileUp size={14} /> Import Statement
-                                    </button>
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        max={90}
-                                        value={syncDays}
-                                        onChange={(e) => setSyncDays(e.target.value)}
-                                        className="form-input"
-                                        style={{ width: 84, padding: '6px 8px' }}
-                                        title="Sync days"
-                                    />
-                                    <button type="button" className="btn btn-secondary btn-sm" onClick={handleSyncFromProvider} disabled={syncing}>
-                                        {syncing ? 'Syncing...' : 'Auto Sync'}
-                                    </button>
-                                </div>
+                                <button type="button" className="btn btn-secondary btn-sm" onClick={handleImportStatement}>
+                                    <FileUp size={14} /> Import Statement
+                                </button>
                             </div>
                         </div>
 
