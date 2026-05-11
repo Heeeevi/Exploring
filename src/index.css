@@ -2696,7 +2696,7 @@ tbody tr:hover {
 }
 
 /* Spin animation for loaders */
-.spin {
+.spin, .spinning {
   animation: spin 1s linear infinite;
 }
 @keyframes spin {

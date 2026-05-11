@@ -116,6 +116,9 @@ export const api = {
     getActivities: (page = 1, limit = 50, entityType = '') => request(`/activity?page=${page}&limit=${limit}${entityType ? '&entity_type=' + entityType : ''}`),
     getActivityStats: () => request('/activity/stats'),
 
+    // Anomaly Detection
+    getAnomalies: () => request('/anomalies'),
+
     // Bank Reconciliation (manual statement import + ledger matching)
     reconciliationAccounts: () => request('/reconciliation/accounts'),
     reconciliationCreateAccount: (data) => request('/reconciliation/accounts', { method: 'POST', body: JSON.stringify(data) }),

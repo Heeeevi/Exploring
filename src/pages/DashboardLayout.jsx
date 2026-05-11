@@ -67,6 +67,10 @@ export default function DashboardLayout() {
                         <Activity size={20} className="icon" />
                         <span>Activity Log</span>
                     </NavLink>
+                    <NavLink to="/dashboard/trust-monitor" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+                        <Shield size={20} className="icon" />
+                        <span>Trust Monitor</span>
+                    </NavLink>
                     <a href="/public" target="_blank" className="sidebar-link">
                         <Globe size={20} className="icon" />
                         <span>Public Ledger</span>

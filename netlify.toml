@@ -111,6 +111,12 @@
   to     = "/.netlify/functions/telegram"
   status = 200
 
+# Anomalies (Trust Monitor)
+[[redirects]]
+  from   = "/api/anomalies"
+  to     = "/.netlify/functions/anomalies"
+  status = 200
+
 # Health
 [[redirects]]
   from   = "/api/health"

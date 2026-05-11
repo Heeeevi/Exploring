@@ -15,6 +15,7 @@ import Guide from './pages/Guide';
 import HowItWorks from './pages/HowItWorks';
 import SolanaAnchor from './pages/SolanaAnchor';
 import ActivityLog from './pages/ActivityLog';
+import TrustMonitor from './pages/TrustMonitor';
 
 function ProtectedRoute({ children }) {
     const { user } = useAuth();
@@ -42,6 +43,7 @@ function App() {
                         <Route path="guide" element={<Guide />} />
                         <Route path="solana" element={<SolanaAnchor />} />
                         <Route path="activity" element={<ActivityLog />} />
+                        <Route path="trust-monitor" element={<TrustMonitor />} />
                     </Route>
                     <Route path="/public" element={<PublicLedger />} />
                     <Route path="/public/how-it-works" element={<HowItWorks />} />

@@ -14,6 +14,7 @@ const solanaRouter = require('./routes/solana.cjs');
 const activityRouter = require('./routes/activity.cjs');
 const telegramRouter = require('./routes/telegram.cjs');
 const reconciliationRouter = require('./routes/reconciliation.cjs');
+const anomaliesRouter = require('./routes/anomalies.cjs');
 const { startReconciliationScheduler } = require('./reconciliation-scheduler.cjs');
 
 const app = express();
@@ -33,6 +34,7 @@ app.use('/api/solana', solanaRouter);
 app.use('/api/activity', activityRouter);
 app.use('/api/telegram', telegramRouter);
 app.use('/api/reconciliation', reconciliationRouter);
+app.use('/api/anomalies', anomaliesRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
