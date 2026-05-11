@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useTheme } from '../useTheme';
-import { Shield, ArrowLeft, Eye, Link as LinkIcon, DollarSign, Globe, FileText } from 'lucide-react';
+import { Shield, ArrowLeft, Eye, Link as LinkIcon, DollarSign, Globe, FileText, Database, Lock, Users, Clock } from 'lucide-react';
 import { Sun, Moon } from 'lucide-react';
 
 export default function HowItWorks() {
@@ -41,22 +41,58 @@ export default function HowItWorks() {
         },
     ];
 
+    const whyBlockchain = [
+        {
+            icon: <Database size={18} />,
+            title: 'Why not just use a regular database?',
+            desc: 'A database — even append-only — requires trust in the operator. An admin can wipe the server, delete records, or redeploy. With Solana anchoring, the proof exists independently of any single party.'
+        },
+        {
+            icon: <Globe size={18} />,
+            title: 'Public verifiability without permission',
+            desc: 'Anyone can verify the Merkle Root on Solana Explorer — no API keys, no database access, no permission from the organization needed.'
+        },
+        {
+            icon: <Clock size={18} />,
+            title: 'Temporal proof (prevents backdating)',
+            desc: "Solana's slot timestamp proves data existed at a specific point in time. Organizations cannot retroactively create fake historical records that match the on-chain root."
+        },
+        {
+            icon: <Lock size={18} />,
+            title: 'Censorship resistance',
+            desc: 'The organization can shut down their server, delete their database, fire their IT team. The on-chain proof remains permanently on Solana.'
+        },
+        {
+            icon: <Users size={18} />,
+            title: 'Multi-party verification',
+            desc: 'A donor in Jakarta, a journalist in Surabaya, and an auditor in London can all independently verify the same proof — without coordinating.'
+        },
+    ];
+
     const faqs = [
         {
-            q: 'Apakah data keuangan saya aman?',
-            a: 'Ya. Hanya staff yang login bisa menambah transaksi. Public Ledger hanya menampilkan informasi yang relevan untuk transparansi.'
+            q: 'Why not use a regular database or audit log?',
+            a: 'An append-only database requires you to trust the database operator. Solana requires you to trust math. With FundNProof, proofs exist independently — even if we disappear, the on-chain evidence remains forever.'
         },
         {
-            q: 'Apa yang terjadi kalau ada yang coba mengubah data?',
-            a: 'Setiap perubahan data akan merusak hash chain. Sistem Chain Integrity Check akan langsung menunjukkan titik kerusakannya.'
+            q: 'Can organizations input fake data?',
+            a: 'Honest answer: yes, no system prevents false input. But FundNProof makes lying expensive and permanent. Fake data is recorded on a public ledger, anchored to Solana permanently, and donors can cross-verify amounts against their own receipts. The discrepancy becomes permanent, traceable evidence.'
         },
         {
-            q: 'Apakah saya perlu paham blockchain?',
-            a: 'Tidak. FundNProof dirancang seperti software akuntansi biasa. Proses blockchain berjalan otomatis di belakang layar.'
+            q: 'Do I need to understand blockchain?',
+            a: 'No. FundNProof is designed like regular accounting software. Blockchain processes run automatically in the background. Public verification is as simple as opening a web page.'
         },
         {
-            q: 'Siapa yang bisa melihat Public Ledger?',
-            a: 'Siapa saja tanpa perlu login. Donatur, auditor, pemerintah, jurnalis, dan publik umum bisa memverifikasi transaksi.'
+            q: 'Who can see the Public Ledger?',
+            a: 'Anyone — no login required. Donors, auditors, journalists, government, and the general public can independently verify transactions.'
+        },
+        {
+            q: 'What happens if someone tries to modify recorded data?',
+            a: 'Every modification breaks the SHA-256 hash chain. The Chain Integrity Check immediately reveals where the break occurred. Additionally, the on-chain Merkle Root will no longer match the recomputed local root — making tampering mathematically detectable.'
+        },
+        {
+            q: 'What if FundNProof as a company disappears?',
+            a: 'The on-chain proofs on Solana remain forever. Exported data can be independently verified by anyone using the open-source hashing algorithm. The database is the convenience layer — Solana is the truth layer.'
         },
     ];
 
@@ -125,6 +161,28 @@ export default function HowItWorks() {
                             <div style={{ flex: 1 }}>
                                 <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 6 }}>{item.title}</h3>
                                 <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{item.desc}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Why Blockchain Section */}
+                <div style={{ marginBottom: 56 }} className="fade-up delay-200">
+                    <h2 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: 8, textAlign: 'center' }}>
+                        Why Blockchain Must Exist Here
+                    </h2>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: 28, maxWidth: 600, margin: '0 auto 28px' }}>
+                        "An append-only database requires you to trust the operator. Solana requires you to trust math."
+                    </p>
+
+                    {whyBlockchain.map((item, i) => (
+                        <div key={i} style={{ display: 'flex', gap: 20, marginBottom: 24, alignItems: 'flex-start' }}>
+                            <div style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0, background: 'rgba(139, 92, 246, 0.1)', color: 'var(--accent-purple)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {item.icon}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 4 }}>{item.title}</h3>
+                                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{item.desc}</p>
                             </div>
                         </div>
                     ))}

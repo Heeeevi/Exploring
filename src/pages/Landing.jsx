@@ -109,16 +109,24 @@ export default function Landing({ toggleTheme }) {
 
     const faqs = [
         {
-            q: "Bagaimana cara kerja verifikasi FundNProof?",
-            a: "Semua transaksi yang dicatat akan di-hash secara kriptografis dan dikelompokkan ke dalam Merkle Tree. Root hash dari pohon ini kemudian dipublikasikan ke jaringan Solana, memastikan bahwa data historis tidak dapat diubah tanpa terdeteksi."
+            q: "How does FundNProof verification work?",
+            a: "All recorded transactions are cryptographically hashed and grouped into a Merkle Tree. The root hash is then published to the Solana network, ensuring that historical data cannot be altered without detection."
         },
         {
-            q: "Apakah saya harus mengerti Crypto/Blockchain?",
-            a: "Tidak. FundNProof dirancang seperti ERP (Enterprise Resource Planning) pada umumnya. Operator Anda hanya perlu melakukan input data seperti biasa, dan sistem kami yang akan menangani kompleksitas blockchain di latar belakang."
+            q: "Why not just use a regular database or audit log?",
+            a: "An append-only database requires you to trust the operator — they can wipe the server or redeploy. With Solana anchoring, the proof exists independently. Even if FundNProof disappears, the on-chain evidence remains forever. Trust math, not institutions."
         },
         {
-            q: "Kenapa menggunakan Solana?",
-            a: "Solana menawarkan kombinasi kecepatan (throughput tinggi) dan biaya transaksi yang sangat rendah, sehingga ideal untuk memverifikasi ribuan transaksi mikro (seperti donasi atau operasional harian) tanpa membebani biaya operasional."
+            q: "Can organizations input fake data?",
+            a: "No system can prevent false input. But FundNProof makes lying expensive: fake data is permanently recorded on a public ledger and anchored to Solana. Donors can cross-verify amounts against their own receipts via Donor Receipt Verification. Any discrepancy becomes permanent, traceable evidence."
+        },
+        {
+            q: "Do I need to understand Crypto/Blockchain?",
+            a: "No. FundNProof is designed like a regular ERP system. Your operators just input data normally, and our system handles blockchain complexity in the background."
+        },
+        {
+            q: "Why Solana?",
+            a: "Solana offers high throughput and extremely low transaction fees (<$0.003), making it ideal for verifying thousands of micro-transactions (like donations or daily operations) without imposing operational costs."
         }
     ];
 

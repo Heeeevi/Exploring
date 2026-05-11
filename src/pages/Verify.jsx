@@ -60,6 +60,28 @@ export default function Verify() {
     const [chainLoading, setChainLoading] = useState(false);
     const { theme, toggleTheme } = useTheme();
 
+    // Donor Receipt Verification state
+    const [donorName, setDonorName] = useState('');
+    const [donorRef, setDonorRef] = useState('');
+    const [donorResults, setDonorResults] = useState(null);
+    const [donorLoading, setDonorLoading] = useState(false);
+
+    const handleDonorLookup = async () => {
+        const name = donorName.trim();
+        const ref = donorRef.trim();
+        if (!name && !ref) return;
+        setDonorLoading(true);
+        setDonorResults(null);
+        try {
+            const data = await api.donorLookup(name || undefined, ref || undefined);
+            setDonorResults(data);
+        } catch (err) {
+            setDonorResults({ total_matches: 0, results: [], error: err.message });
+        } finally {
+            setDonorLoading(false);
+        }
+    };
+
     const currentVerificationValue = (txId || '').trim();
     const telegramUrl = buildTelegramUrl(currentVerificationValue);
     const mailtoUrl = buildMailtoUrl(currentVerificationValue);
@@ -467,6 +489,112 @@ export default function Verify() {
                         </div>
                     </div>
                 )}
+
+                {/* Donor Receipt Verification */}
+                <div className="card fade-up delay-400" style={{ maxWidth: 700, margin: '32px auto' }}>
+                    <div className="card-header">
+                        <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <Search size={18} style={{ color: 'var(--accent-green)' }} />
+                            Donor Receipt Verification
+                        </h2>
+                    </div>
+                    <div className="card-body">
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 16 }}>
+                            Are you a donor? Search by your <strong>name</strong> or <strong>reference number</strong> to verify your donation was recorded correctly. Compare the amount and date against your own receipt.
+                        </p>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+                            <input
+                                className="form-input"
+                                value={donorName}
+                                onChange={e => setDonorName(e.target.value)}
+                                placeholder="Your donor name"
+                                style={{ flex: '1 1 180px', fontSize: '0.85rem' }}
+                                onKeyDown={e => e.key === 'Enter' && handleDonorLookup()}
+                            />
+                            <input
+                                className="form-input"
+                                value={donorRef}
+                                onChange={e => setDonorRef(e.target.value)}
+                                placeholder="Reference number (optional)"
+                                style={{ flex: '1 1 180px', fontSize: '0.85rem' }}
+                                onKeyDown={e => e.key === 'Enter' && handleDonorLookup()}
+                            />
+                            <button className="btn btn-primary" onClick={handleDonorLookup} disabled={donorLoading} style={{ whiteSpace: 'nowrap' }}>
+                                {donorLoading ? 'Searching...' : <><Search size={14} /> Look Up</>}
+                            </button>
+                        </div>
+
+                        {donorResults && (
+                            <div style={{ marginTop: 16 }}>
+                                {donorResults.error ? (
+                                    <div style={{ padding: 12, background: 'rgba(239, 68, 68, 0.08)', borderRadius: 8, color: 'var(--accent-red)', fontSize: '0.85rem' }}>
+                                        {donorResults.error}
+                                    </div>
+                                ) : donorResults.total_matches === 0 ? (
+                                    <div style={{ padding: 12, background: 'rgba(139, 92, 246, 0.05)', borderRadius: 8, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                        No matching donations found. Check your spelling or try a different search.
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--accent-green)', fontWeight: 600, marginBottom: 10 }}>
+                                            ✓ Found {donorResults.total_matches} donation(s)
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                            {donorResults.results.map((r, i) => (
+                                                <div key={i} style={{
+                                                    padding: '12px 16px', borderRadius: 8,
+                                                    background: 'rgba(16, 185, 129, 0.04)',
+                                                    border: '1px solid rgba(16, 185, 129, 0.12)',
+                                                }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                                                        <div>
+                                                            <span style={{ fontWeight: 700, color: 'var(--accent-green)', fontSize: '1rem' }}>
+                                                                +${r.amount?.toLocaleString()}
+                                                            </span>
+                                                            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginLeft: 8 }}>
+                                                                {r.currency}
+                                                            </span>
+                                                        </div>
+                                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                                            {new Date(r.recorded_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                                        </span>
+                                                    </div>
+                                                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: 4 }}>
+                                                        {r.description} {r.program_name && <span style={{ color: 'var(--text-muted)' }}>→ {r.program_name}</span>}
+                                                    </div>
+                                                    {r.blockchain_hash && (
+                                                        <div style={{ fontSize: '0.72rem', color: 'var(--accent-purple)', fontFamily: 'var(--font-mono)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            <LinkIcon size={10} /> {r.blockchain_hash.slice(0, 24)}...
+                                                            <button
+                                                                className="btn btn-ghost btn-sm"
+                                                                style={{ padding: '2px 6px', fontSize: '0.7rem' }}
+                                                                onClick={() => { setTxId(r.transaction_id); handleVerify(r.transaction_id); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                                            >
+                                                                Verify →
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 6, fontStyle: 'italic', lineHeight: 1.4 }}>
+                                                        ⓘ Compare this amount and date against your own receipt. Mismatches are permanently traceable on-chain.
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
+                        <div style={{ marginTop: 16, padding: 12, background: 'rgba(59, 130, 246, 0.05)', borderRadius: 8, border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-accent)', fontWeight: 600, marginBottom: 4 }}>
+                                Why does this matter?
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                                This feature addresses the "trust at input" problem. Even though blockchain ensures data can't be changed after recording, donors can independently cross-verify that the <strong>correct</strong> data was recorded in the first place. If an organization records a different amount than what you donated, the discrepancy is now publicly visible and permanently traceable.
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

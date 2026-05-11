@@ -98,6 +98,12 @@ export const api = {
     publicVerifyTx: (txId) => request(`/public/verify/${txId}`),
     publicPrograms: () => request('/public/programs'),
     publicExport: () => request('/public/export'),
+    donorLookup: (name, ref) => {
+        const params = new URLSearchParams();
+        if (name) params.set('name', name);
+        if (ref) params.set('ref', ref);
+        return request(`/public/donor-lookup?${params.toString()}`);
+    },
 
     // Solana Anchoring
     solanaAnchor: () => request('/solana/anchor', { method: 'POST' }),

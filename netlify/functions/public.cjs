@@ -98,6 +98,63 @@ exports.handler = async (event) => {
             });
         }
 
+        // GET /public/donor-lookup?name=...&ref=...
+        // Donor Receipt Verification: allows donors to cross-verify their donations
+        // This addresses the oracle/input trust problem by enabling independent verification
+        if (segments[0] === 'donor-lookup') {
+            const { name, ref } = query;
+            if (!name && !ref) {
+                return jsonResponse(400, { error: 'Provide donor name or reference number to search' });
+            }
+
+            let q = supabase
+                .from('transactions')
+                .select(`
+                    id, type, amount, currency, description, category, reference_number, created_at,
+                    donors(name, email),
+                    programs(name),
+                    ledger_entries(hash, prev_hash, timestamp)
+                `)
+                .eq('type', 'income')
+                .order('created_at', { ascending: false })
+                .limit(20);
+
+            if (name) {
+                q = q.ilike('donors.name', `%${name}%`);
+            }
+            if (ref) {
+                q = q.ilike('reference_number', `%${ref}%`);
+            }
+
+            const { data: transactions } = await q;
+
+            // Filter out transactions where the donor join returned null (no match)
+            const matched = (transactions || []).filter(t => t.donors !== null);
+
+            const results = matched.map(t => ({
+                transaction_id: t.id,
+                amount: t.amount,
+                currency: t.currency,
+                description: t.description,
+                category: t.category,
+                reference_number: t.reference_number,
+                donor_name: t.donors?.name,
+                program_name: t.programs?.name,
+                recorded_at: t.created_at,
+                blockchain_hash: t.ledger_entries?.[0]?.hash,
+                hash_timestamp: t.ledger_entries?.[0]?.timestamp,
+                // Verification hint for donors
+                verification_note: 'Compare this amount and date against your own donation receipt. If they don\'t match, the organization may have recorded incorrect data — and the discrepancy is now permanently traceable on-chain.'
+            }));
+
+            return jsonResponse(200, {
+                query: { name: name || null, ref: ref || null },
+                total_matches: results.length,
+                results,
+                trust_message: 'These records are cryptographically hashed and anchored to Solana. If any data is modified after recording, the hash chain will break and the tampering will be detectable.'
+            });
+        }
+
         return jsonResponse(404, { error: 'Not found' });
     } catch (err) {
         console.error('Public error:', err);
